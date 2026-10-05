@@ -40,7 +40,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .wrap{position:relative;z-index:2;max-width:980px;margin:0 auto;padding-inline:16px;padding-block:28px 90px;display:flex;flex-direction:column;gap:56px}
 
 /* hero */
-.hero{display:grid;grid-template-columns:1fr;gap:20px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+.hero>*{min-width:0}
 .hero h1{font:400 clamp(56px,11vw,124px)/.85 var(--display);margin:0;color:var(--green);letter-spacing:.01em;
   text-shadow:0 0 18px rgba(92,242,138,.35)}
 .hero h1 .cur{display:inline-block;width:.5em;height:.78em;background:var(--green);vertical-align:-.04em;margin-left:.08em;animation:blink 1.05s steps(1) infinite}
@@ -196,12 +197,55 @@ footer{color:var(--dim);font-size:12px}
 .tmux a:hover{background:#0b3a1c;color:var(--green)}
 .tmux .clk{padding:3px 0 3px 10px;font-variant-numeric:tabular-nums}
 
+.only-touch{display:none}
+@media (hover:none){ .only-touch{display:inline} .only-mouse{display:none} }
 @media (max-width:560px){
+  #net{opacity:.6}
+  .wrap{gap:44px;padding-block:20px 84px}
+  .hero{gap:14px}
+  .hero h1{font-size:clamp(52px,17vw,80px)}
+  .role{font-size:12px;gap:4px 12px}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .term-body{height:300px}
+  .stats b{font-size:34px}
+  .term-body{height:min(52vh,340px);padding:10px}
+  .term-bar span{display:none}
+  .inrow input{font-size:16px}          /* stops iOS zooming into the input */
+  .chips{gap:8px;padding:10px}
+  .chip{padding:7px 12px;font-size:13px}
   .kv{grid-template-columns:1fr;gap:0}
   .kv dd{margin-bottom:6px}
-  .tmux .clk .tz{display:none}
+  h2{font-size:34px}
+  .cmd{font-size:12px}
+  /* skills table: fit the screen */
+  .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:none;padding:7px 12px;font-size:13px}
+  table{font-size:12px}
+  th,td{padding:6px 8px}
+  th:nth-child(3),td:nth-child(3){display:none}
+  /* case file: tidy hop grid, no dangling arrows */
+  .hops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .hops .arrow{display:none}
+  .hop{padding:10px 8px;width:100%}
+  .evidence{font-size:12px;min-height:10em}
+  .case-act .btn,.case-act .chip{flex:1;padding:10px;text-align:center}
+  /* garage */
+  .garage{grid-template-columns:1fr}
+  .rig{padding:14px}
+  .big{font-size:46px}
+  #throttle{padding:14px;font-size:15px}
+  .tacho{font-size:11px}
+  /* contact */
+  .contact .row{gap:2px 10px}
+  .contact .k{width:auto}
+  .copy{padding:4px 10px;font-size:12px}
+  /* tmux bar */
+  .tmux{font-size:12px;padding-inline:6px}
+  .tmux a{padding:9px 9px}
+  .tmux .clk{display:none}
+  .tmux .sess{padding:9px 6px 9px 0}
+  .commit{padding-left:18px}
+  .fp h3{font-size:28px}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
@@ -382,7 +426,7 @@ footer{color:var(--dim);font-size:12px}
     <div class="garage">
       <div class="rig" id="f1">
         <h3>./lights-out</h3>
-        <div class="sub">Five reds, then go. Click the gantry (or press Enter on it) when the lights go out.</div>
+        <div class="sub">Five reds, then go. <span class="only-mouse">Click the gantry (or press Enter on it)</span><span class="only-touch">Tap the gantry</span> when the lights go out.</div>
         <div class="lights" id="gantry" tabindex="0" role="button" aria-label="F1 start lights reaction test"></div>
         <div class="readout">
           <div><div class="big" id="rt">0.000</div><div class="small" id="rtmsg">Click to start</div></div>
@@ -392,7 +436,7 @@ footer{color:var(--dim);font-size:12px}
 
       <div class="rig shift" id="ride">
         <h3>./throttle</h3>
-        <div class="sub">Hold the button (or Space while it's focused) to twist the grip. Release to coast.</div>
+        <div class="sub"><span class="only-mouse">Hold the button (or Space while it's focused)</span><span class="only-touch">Press and hold the button</span> to twist the grip. Release to coast.</div>
         <div class="dash">
           <div><b id="gear">N</b><small>gear</small></div>
           <div><b id="spd">0</b><small>km/h</small></div>
@@ -521,7 +565,7 @@ function print(html, cls){ const d=document.createElement("pre"); d.className="l
 function go(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:reduced?"auto":"smooth",block:"start"}); }
 const lnk = (u,t)=>`<a href="${u}" target="_blank" rel="noopener">${esc(t||u)}</a>`;
 
-const NEOFETCH = () => `<span class="p">      .--.          </span>  <span class="w">om</span>@<span class="w">omniscient</span>
+const NEOFETCH = () => innerWidth<560 ? NEOFETCH_SM() : `<span class="p">      .--.          </span>  <span class="w">om</span>@<span class="w">omniscient</span>
 <span class="p">   .-(    ).        </span>  ---------
 <span class="p">  (___.__)__)       </span>  <span class="p">role</span>:    DevOps Engineer
 <span class="p">   |  |  |          </span>  <span class="p">org</span>:     Bajaj Finserv Health Ltd.
@@ -535,6 +579,18 @@ const NEOFETCH = () => `<span class="p">      .--.          </span>  <span class
 <span class="p">                    </span>  <span class="p">open to</span>: devops, cloud, sre, platform
 <span class="d">type </span><span class="p">help</span><span class="d"> to see what this shell can do.</span>`;
 
+const NEOFETCH_SM = () => `<span class="w">om</span>@<span class="w">omniscient</span>
+<span class="d">--------------</span>
+<span class="p">role</span>    DevOps Engineer
+<span class="p">org</span>     Bajaj Finserv Health
+<span class="p">fleet</span>   3–5 AKS · 100+ svcs
+<span class="p">cloud</span>   azure*, aws, gcp
+<span class="p">net</span>     vnet nsg udr fw ipsec
+<span class="p">iac</span>     opentofu, terraform
+<span class="p">os</span>      arch linux <span class="d">(btw)</span>
+<span class="p">hobbies</span> f1, riding
+<span class="p">open to</span> devops, cloud, sre, platform
+<span class="d">tap a command below, or type </span><span class="p">help</span>`;
 const CMDS = {
   help:{d:"list commands", f(){ print(Object.entries(CMDS).filter(([,v])=>!v.h).map(([k,v])=>`  <span class="p">${k.padEnd(11)}</span><span class="d">${v.d}</span>`).join("\n")); }},
   whoami:{d:"who is om", f(){ print("Om Hinge. DevOps engineer in Pune. Azure-first, AKS at scale, happiest in the network layer."); }},
@@ -695,7 +751,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("#night").hidde
     const c=CASES[ci]; sel=null; insp=0; done=false; acc.disabled=true;
     $("#caseid").textContent="CASE #0x"+num.toString(16).padStart(2,"0").toUpperCase(); $("#casetitle").textContent=c.t; $("#caseinsp").textContent=0;
     hopsEl.innerHTML=HOPS.map(([k,l],i)=>(i?'<span class="arrow">→</span>':"")+`<button class="hop" data-k="${k}">${k}<small>${l}</small></button>`).join("");
-    ev.innerHTML='<span class="d">Click a hop to inspect it. When you know where the packet dies, accuse that hop.</span>';
+    ev.innerHTML='<span class="d">Pick a hop to inspect it. When you know where the packet dies, accuse that hop.</span>';
   }
   hopsEl.addEventListener("click",e=>{
     const b=e.target.closest(".hop"); if(!b||done) return;
@@ -801,6 +857,8 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("#night").hidde
   addEventListener("resize",resize); resize();
   addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.on=true});
   document.addEventListener("pointerleave",()=>{mouse.on=false;mouse.x=mouse.y=-999});
+  addEventListener("pointerup",e=>{ if(e.pointerType!=="mouse"){ setTimeout(()=>{mouse.on=false;mouse.x=mouse.y=-999},400); } });
+  addEventListener("scroll",()=>{ if(!matchMedia("(hover:hover)").matches){ mouse.on=false; } },{passive:true});
   addEventListener("pointerdown",e=>{
     if(e.target.closest("button,a,input,.lights,.term,#throttle")) return;
     let best=null,bd=1e9; nodes.forEach(n=>{const d=(n.x-e.clientX)**2+(n.y-e.clientY)**2; if(d<bd){bd=d;best=n}});
@@ -830,7 +888,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("#night").hidde
     clouds.forEach(c=>{
       if(!reduced) c.x+=c.v; if(c.x-160*c.s>W) c.x=-160*c.s;
       cloudPath(c); ctx.strokeStyle=`rgba(${G},.16)`; ctx.stroke(); ctx.fillStyle=`rgba(${G},.018)`; ctx.fill();
-      ctx.font="11px IBM Plex Mono, monospace"; ctx.fillStyle=`rgba(${G},.32)`; ctx.fillText(c.n,c.x-60*c.s,c.y+2*c.s);
+      if(W>=560){ ctx.font="11px IBM Plex Mono, monospace"; ctx.fillStyle=`rgba(${G},.32)`; ctx.fillText(c.n,c.x-60*c.s,c.y+2*c.s); }
     });
     ctx.setLineDash([]);
     // move nodes
