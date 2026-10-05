@@ -1,0 +1,34 @@
+name: uptime
+
+# Cloudflare Pages deploys this repo on every push (Git integration).
+# This workflow only watches the live site: after each push and every 6 hours.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Cloudflare to finish deploying
+        if: github.event_name == 'push'
+        run: sleep 90
+
+      - name: Check omhinge.cloud
+        run: |
+          for url in https://omhinge.cloud https://www.omhinge.cloud; do
+            ok=""
+            for i in 1 2 3 4 5; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" -L "$url")
+              if [ "$code" = "200" ]; then ok=1; break; fi
+              echo "$url -> $code, retry $i"; sleep 10
+            done
+            [ -n "$ok" ] || { echo "::error::$url is down"; exit 1; }
+            echo "$url -> 200"
+          done
+          curl -sI https://omhinge.cloud | grep -qi "content-security-policy" \
+            || { echo "::error::security headers missing"; exit 1; }
+          echo "security headers present"

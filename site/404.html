@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>404 · Om Hinge</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap">
+<style>
+:root{--bg:#060907;--fg:#c9d6cb;--dim:#5d7363;--green:#5cf28a;--red:#ff4d4d;color-scheme:dark}
+html,body{background:var(--bg);color:var(--fg);margin:0;font:14px/1.6 "IBM Plex Mono",ui-monospace,monospace}
+main{max-width:720px;margin:0 auto;padding:15vh 16px 40px;display:flex;flex-direction:column;gap:14px}
+h1{font:400 clamp(64px,14vw,120px)/.9 "VT323",monospace;color:var(--red);margin:0}
+pre{margin:0;white-space:pre-wrap;color:var(--dim)}
+a{color:var(--green)}
+</style>
+</head>
+<body>
+<main>
+  <h1>404</h1>
+  <pre>om@omniscient:~$ curl -I https://omhinge.cloud<span id="p"></span>
+HTTP/2 404
+x-route: no matching route
+
+traceroute: packet dropped at hop 3 (path not found)</pre>
+  <p>That page doesn't exist. <a href="/">Go back to the shell</a>.</p>
+</main>
+<script>document.getElementById("p").textContent=location.pathname</script>
+</body>
+</html>

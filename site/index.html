@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Om Hinge: DevOps engineer in Pune. Azure, AKS and network troubleshooting. Open to DevOps, Cloud, SRE and Platform roles.">
+<meta name="theme-color" content="#060907">
+<link rel="canonical" href="https://omhinge.cloud/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://omhinge.cloud/">
+<meta property="og:title" content="Om Hinge · DevOps">
+<meta property="og:description" content="DevOps engineer. Azure, AKS, networking. Open to DevOps, Cloud, SRE and Platform roles.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23060907'/%3E%3Cpath d='M3 4l4 4-4 4' stroke='%235cf28a' stroke-width='2' fill='none'/%3E%3Crect x='8' y='11' width='5' height='2' fill='%235cf28a'/%3E%3C/svg%3E">
+<title>Om Hinge · DevOps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=VT323&display=swap">
+<style>
+/* Layout: one terminal column over a live network/cloud topology canvas; sections are command outputs; tmux status bar pinned to the bottom. Single dark look by design. */
+:root{
+  --bg:#060907; --panel:rgba(9,15,11,.82); --line:#1c2a20; --dim:#5d7363; --fg:#c9d6cb;
+  --green:#5cf28a; --green-d:#2e8a4c; --amber:#ffb347; --red:#ff4d4d;
+  --display:"VT323", "IBM Plex Mono", ui-monospace, monospace;
+  --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--fg);font:14px/1.6 var(--mono);margin:0;overflow-x:hidden}
+::selection{background:var(--green);color:var(--bg)}
+a{color:var(--green);text-decoration:none;border-bottom:1px dashed var(--green-d)}
+a:hover,a:focus-visible{color:var(--bg);background:var(--green);outline:none}
+:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+button{font:inherit;color:inherit;cursor:pointer}
+
+#net{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.scan{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.18) 2px 3px)}
+.wrap{position:relative;z-index:2;max-width:980px;margin:0 auto;padding-inline:16px;padding-block:28px 90px;display:flex;flex-direction:column;gap:56px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr;gap:20px}
+.hero h1{font:400 clamp(56px,11vw,124px)/.85 var(--display);margin:0;color:var(--green);letter-spacing:.01em;
+  text-shadow:0 0 18px rgba(92,242,138,.35)}
+.hero h1 .cur{display:inline-block;width:.5em;height:.78em;background:var(--green);vertical-align:-.04em;margin-left:.08em;animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.role{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--dim);font-size:13px}
+.role b{color:var(--fg);font-weight:500}
+.role .live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px;box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+/* terminal */
+.term{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(3px)}
+.term-bar{display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid var(--line);color:var(--dim);font-size:12px}
+.term-bar i{width:9px;height:9px;border:1px solid var(--dim);display:inline-block}
+.term-bar span{margin-left:auto}
+.term-body{height:360px;overflow-y:auto;padding:12px 14px;cursor:text;scrollbar-width:thin;scrollbar-color:var(--green-d) transparent}
+.term-body pre{margin:0;white-space:pre-wrap;word-break:break-word;font:inherit}
+.ln{min-height:1.6em}
+.p{color:var(--green)} .a{color:var(--amber)} .d{color:var(--dim)} .r{color:var(--red)} .w{color:#fff}
+.inrow{display:flex;gap:8px;align-items:center}
+.inrow input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--fg);font:inherit;caret-color:var(--green);padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-top:1px solid var(--line)}
+.chip{background:transparent;border:1px solid var(--line);color:var(--dim);padding:2px 9px;font-size:12px}
+.chip:hover,.chip:focus-visible{border-color:var(--green);color:var(--green)}
+
+/* section */
+section{scroll-margin-top:20px}
+.cmd{font-size:13px;color:var(--dim);margin:0 0 14px;display:flex;flex-wrap:wrap;gap:0 8px}
+.cmd .p{font-weight:600}
+.cmd .c{color:var(--fg)}
+h2{font:400 40px/1 var(--display);color:var(--fg);margin:0 0 16px;letter-spacing:.02em;text-wrap:balance}
+h2 em{font-style:normal;color:var(--green)}
+.prose{max-width:65ch;display:flex;flex-direction:column;gap:12px}
+.prose p{margin:0}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 18px;font-size:13px;margin-top:6px}
+.kv dt{color:var(--dim)} .kv dd{margin:0}
+
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:6px 0}
+.stats div{border:1px solid var(--line);background:var(--panel);padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.stats b{font:400 40px/1 var(--display);color:var(--green);font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--dim);line-height:1.4}
+.blurb{margin:8px 0 0;color:var(--amber);font-size:13px;max-width:65ch}
+.diff{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;max-width:72ch}
+.diff li{padding-left:16px;position:relative}
+.diff li::before{content:"+";position:absolute;left:0;color:var(--green)}
+.tag{color:var(--amber);font-size:12px;margin-right:8px}
+.tag::before{content:"["}.tag::after{content:"]"}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.fp{border:1px solid var(--green-d);background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.fp h3{margin:0;font:400 32px/1 var(--display);color:#fff}
+.fp p{margin:0;font-size:13px}
+.fp .perm{color:var(--amber);font-size:12px}
+.fp .flow{font-size:12px;color:var(--dim);border-top:1px dashed var(--line);padding-top:8px;overflow-x:auto;white-space:nowrap}
+.lede{margin:0 0 14px;max-width:65ch;color:var(--fg)}
+.case{border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+.case-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.hops{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:16px 14px}
+.hop{background:transparent;border:1px solid var(--line);color:var(--fg);padding:6px 10px;font-size:12px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.hop small{color:var(--dim);font-size:10px}
+.hop:hover{border-color:var(--green-d)}
+.hop.seen{border-color:var(--dim)}
+.hop.sel{border-color:var(--amber);color:var(--amber)}
+.hop.ok{border-color:var(--green);color:var(--green)}
+.hop.bad{border-color:var(--red);color:var(--red);box-shadow:0 0 12px rgba(255,77,77,.35)}
+.arrow{color:var(--dim);font-size:12px}
+.evidence{margin:0;padding:12px 14px;border-top:1px dashed var(--line);min-height:8.5em;white-space:pre-wrap;word-break:break-word;font:12.5px/1.6 var(--mono);color:var(--fg)}
+.case-act{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed;background:transparent!important;color:var(--green)!important}
+/* skills table */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tab{background:transparent;border:1px solid var(--line);color:var(--dim);padding:3px 10px;font-size:12px}
+.tab[aria-selected="true"]{background:var(--green);color:var(--bg);border-color:var(--green)}
+.tab:hover{border-color:var(--green)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th{text-align:left;color:var(--dim);font-weight:500;padding:8px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:5px 14px;white-space:nowrap}
+tbody tr:hover td{background:rgba(92,242,138,.06)}
+td.st{color:var(--green)} td.st.pri{color:var(--amber)}
+tbody tr{animation:rowin .35s both}
+@keyframes rowin{from{opacity:.2;transform:translateX(-6px)}}
+
+/* git log */
+.log{display:flex;flex-direction:column;border-left:1px dashed var(--green-d);margin-left:6px}
+.commit{position:relative;padding:0 0 26px 24px}
+.commit::before{content:"*";position:absolute;left:-7px;top:-1px;color:var(--green);background:var(--bg);line-height:1.2;font-weight:600}
+.commit .h{font-size:12px;color:var(--amber)}
+.commit .h .ref{color:var(--green)}
+.commit h3{margin:2px 0 4px;font:500 16px/1.4 var(--mono);color:#fff}
+.commit .org{color:var(--fg)}
+.commit .meta{color:var(--dim);font-size:12px}
+.commit p{margin:8px 0 0;max-width:65ch}
+
+/* projects */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.proj{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);background:var(--panel);padding:14px;color:var(--fg);border-bottom:1px solid var(--line);position:relative;overflow:hidden;min-width:0}
+.proj:hover,.proj:focus-visible{background:var(--panel);color:var(--fg);border-color:var(--green)}
+.proj .perm{color:var(--dim);font-size:12px}
+.proj .nm{color:var(--green);font-weight:600;word-break:break-all}
+.proj .ds{font-size:13px}
+.proj .lang{margin-top:auto;font-size:12px;color:var(--amber)}
+.proj::after{content:"→ open";position:absolute;right:12px;bottom:12px;font-size:12px;color:var(--green);opacity:0;transition:opacity .2s}
+.proj:hover::after,.proj:focus-visible::after{opacity:1}
+
+/* garage */
+.garage{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.rig{border:1px solid var(--line);background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.rig h3{margin:0;font:400 28px/1 var(--display);color:#fff}
+.rig .sub{color:var(--dim);font-size:12px;margin-top:-6px}
+.lights{display:flex;gap:8px;justify-content:center;padding:14px 8px;background:#020302;border:1px solid var(--line);cursor:pointer;user-select:none}
+.pod{display:flex;flex-direction:column;gap:6px;padding:6px;background:#0d0f0e;border:1px solid #1d211f}
+.bulb{width:clamp(22px,6vw,34px);aspect-ratio:1;border-radius:50%;background:#2a0b0b;max-width:100%}
+.bulb.on{background:var(--red);box-shadow:0 0 16px var(--red)}
+.readout{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.big{font:400 52px/1 var(--display);color:var(--green);font-variant-numeric:tabular-nums}
+.big.bad{color:var(--red)}
+.small{font-size:12px;color:var(--dim)}
+.btn{background:transparent;border:1px solid var(--green);color:var(--green);padding:6px 14px}
+.btn:hover,.btn:focus-visible{background:var(--green);color:var(--bg)}
+.tacho{font-size:13px;white-space:pre;overflow-x:auto;color:var(--green)}
+.tacho .hot{color:var(--red)} .tacho .warm{color:var(--amber)}
+.dash{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.dash div{border:1px solid var(--line);padding:8px 4px}
+.dash b{display:block;font:400 38px/1 var(--display);color:#fff;font-variant-numeric:tabular-nums}
+.dash small{color:var(--dim);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.shift{transition:background .08s}
+.shift.flash{background:rgba(255,77,77,.18)}
+#throttle{touch-action:none;user-select:none;-webkit-user-select:none}
+
+/* contact */
+.contact{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.contact .row{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.contact .k{color:var(--dim);width:9ch}
+.copy{background:transparent;border:1px solid var(--line);color:var(--dim);font-size:11px;padding:1px 8px}
+.copy:hover{border-color:var(--green);color:var(--green)}
+footer{color:var(--dim);font-size:12px}
+
+.egg{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:default}
+.egg:hover,.egg:focus-visible{color:var(--amber);cursor:pointer}
+.hint{font-size:11px;opacity:.6}
+.night{position:fixed;inset:0;z-index:20;background:#03050a;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+.night[hidden]{display:none!important}
+.sky{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.nightmsg{position:relative;max-width:46ch;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;opacity:0;transition:opacity .8s 1.4s;background:rgba(3,5,10,.6);padding:14px 18px}
+.night.on .nightmsg{opacity:1}
+.nightmsg .big{color:var(--amber)}
+.nightmsg p{margin:0}
+/* tmux bar */
+.tmux{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--green);color:var(--bg);font-size:12px;display:flex;align-items:center;gap:2px;padding:0 10px;padding-bottom:env(safe-area-inset-bottom,0px);white-space:nowrap}
+.tmux .sess{font-weight:600;padding:3px 10px 3px 0}
+.tmux nav{display:flex;overflow-x:auto;scrollbar-width:none;min-width:0;flex:1}
+.tmux a{color:var(--bg);border:0;padding:3px 8px}
+.tmux a.cur{background:var(--bg);color:var(--green)}
+.tmux a:hover{background:#0b3a1c;color:var(--green)}
+.tmux .clk{padding:3px 0 3px 10px;font-variant-numeric:tabular-nums}
+
+@media (max-width:560px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .term-body{height:300px}
+  .kv{grid-template-columns:1fr;gap:0}
+  .kv dd{margin-bottom:6px}
+  .tmux .clk .tz{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<canvas id="net" aria-hidden="true"></canvas>
+<div class="scan" aria-hidden="true"></div>
+
+<main class="wrap">
+  <header class="hero" id="top">
+    <div class="role"><span>om@omniscient:~$ whoami</span></div>
+    <h1>om_hinge<span class="cur" aria-hidden="true"></span></h1>
+    <div class="role">
+      <span class="live"><b>DevOps Engineer</b> @ Bajaj Finserv Health</span>
+      <span>Network troubleshooting · Azure · AKS</span>
+      <span>Pune, India · IST</span>
+    </div>
+
+    <div class="term" id="term">
+      <div class="term-bar"><i></i><i></i><i></i> bash — om@omniscient: ~ <span>type <b class="p">help</b></span></div>
+      <div class="term-body" id="tbody" role="log" aria-live="polite">
+        <div id="tout"></div>
+        <div class="inrow"><label for="tin" class="p">om@omniscient:~$</label><input id="tin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Terminal command"></div>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </header>
+
+  <section id="about">
+    <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">cat about.md</span></div>
+    <h2>I keep the <em>packets</em> moving.</h2>
+    <div class="prose">
+      <p>I'm a DevOps engineer at Bajaj Finserv Health, running Azure infrastructure for two organisations (BFHL and Vidal Health): 3–5 AKS clusters and 100+ microservices.</p>
+      <p>Most of my work is on the network. When something can't reach something else, I'm the one tracing it: NSGs, UDRs, Azure Firewall policies, IPSec tunnels, ingress. I design hybrid connectivity, debug it when it breaks, and led the Nginx-to-Traefik migration across every service with zero downtime.</p>
+      <p>I take part in most architecture-level discussions on the team, handle incident escalations, and trained 3 interns from zero to shipping on Kubernetes, CI/CD and Azure.</p>
+      <p>Off the clock: F1 on race weekends, the bike when the roads are clear, and Arch Linux on my machine.</p>
+      <div class="stats" aria-label="Impact numbers">
+        <div><b>100+</b><span>microservices migrated to Traefik, zero downtime</span></div>
+        <div><b>99.9%+</b><span>availability across 3–5 AKS clusters</span></div>
+        <div><b>~8%</b><span>Azure spend cut through rightsizing and cleanup</span></div>
+        <div><b>40%</b><span>faster deploy cycle after the GitLab CI rebuild</span></div>
+        <div><b>3</b><span>interns trained end-to-end</span></div>
+        <div><b>10+</b><span>services onboarded to Kubernetes, ~30% faster time-to-deploy</span></div>
+      </div>
+      <dl class="kv">
+        <dt>current</dt><dd>Associate Software Developer (DevOps) · Bajaj Finserv Health (BFHL + Vidal Health)</dd>
+        <dt>primary cloud</dt><dd>Azure (also AWS, GCP)</dd>
+        <dt>looking for</dt><dd>DevOps, Cloud, SRE and Platform Engineering roles</dd>
+        <dt>education</dt><dd>B.E. Computer Engineering, TCET Mumbai · CGPA 9.42/10</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c" id="kcmd">kubectl get skills --all-namespaces</span></div>
+    <h2>Stack</h2>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>NAME</th><th>NAMESPACE</th><th>READY</th><th>STATUS</th></tr></thead>
+      <tbody id="ktbody"></tbody>
+    </table></div>
+  </section>
+
+  <section id="experience">
+    <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">git log --graph career</span></div>
+    <h2>Experience</h2>
+    <div class="log">
+      <div class="commit">
+        <div class="h">commit a1f3c09 <span class="ref">(HEAD -&gt; main)</span></div>
+        <h3>Associate Software Developer (DevOps) · <span class="org">Bajaj Finserv Health</span></h3>
+        <div class="meta">Nov 2025 – present · full-time · BFHL + Vidal Health · Pune, on-site</div>
+        <ul class="diff">
+          <li><span class="tag">lead</span>De facto tech lead for DevOps across both orgs. Part of most architecture-level discussions, owner of incident escalations and cross-team coordination. Trained and mentored 3 interns on Kubernetes, CI/CD and Azure.</li>
+          <li><span class="tag">network</span>Designed hybrid networking with IPSec VPN tunnels, UDRs and Azure Firewall routing policies to secure inter-VNet and cross-cloud traffic. First call when traffic stops flowing.</li>
+          <li><span class="tag">ingress</span>Sole engineer on the Nginx-to-Traefik migration across 100+ microservices in two orgs, with a zero-downtime cutover ahead of Nginx end-of-life.</li>
+          <li><span class="tag">reliability</span>Resolved production incidents across AKS, MongoDB and Azure VMs under live traffic, and wrote the runbooks. Owned DR planning for 3–5 AKS clusters at 99.9%+ availability.</li>
+          <li><span class="tag">k8s</span>Onboarded 10+ services with Helm charts, Traefik ingress rules and resource limits, cutting time-to-deploy for new services by ~30%.</li>
+          <li><span class="tag">ci/cd</span>Built and maintain 5–15 Azure DevOps pipelines that standardise build-test-deploy and removed manual releases.</li>
+          <li><span class="tag">iac</span>Automated provisioning and patching with Terraform and Bash/Python. Cut Azure spend ~8% via VM rightsizing, orphan cleanup and non-prod shutdown schedules.</li>
+        </ul>
+      </div>
+      <div class="commit">
+        <div class="h">commit 5b8e113</div>
+        <h3>DevOps Intern · <span class="org">Bajaj Finserv Health</span></h3>
+        <div class="meta">Apr 2025 – Oct 2025 · Pune, on-site · converted to full-time</div>
+        <ul class="diff"><li><span class="tag">infra</span>DevOps support and infrastructure security on Azure and Azure DevOps.</li></ul>
+      </div>
+      <div class="commit">
+        <div class="h">commit 7e2d0b4 <span class="d">(parallel branch)</span></div>
+        <h3>DevOps Engineer (Intern) · <span class="org">Xora</span></h3>
+        <div class="meta">Feb 2025 – Mar 2025 · Mumbai, remote</div>
+        <p class="blurb">Walked into a pipeline that worked by habit and left one that worked by design.</p>
+        <ul class="diff">
+          <li><span class="tag">ci/cd</span>Tore down and rebuilt the entire GitLab CI/CD setup: cleaner stages, smarter caching and leaner runners. Deployment cycle time dropped 40% and pipeline agent cost went down with it.</li>
+          <li><span class="tag">deploy</span>Brought in blue-green deployments, so every production release became a traffic switch instead of a gamble. Zero-downtime releases, and rollback is just pointing traffic back.</li>
+        </ul>
+      </div>
+      <div class="commit">
+        <div class="h">commit 3c91fa0 <span class="d">(parallel branch)</span></div>
+        <h3>Software Engineer DevOps · <span class="org">Artha IT</span></h3>
+        <div class="meta">Feb 2025 – Mar 2025 · part-time · Chantilly, Virginia, US (remote)</div>
+        <p class="blurb">A part-time remote role for a US team, running on the other side of the clock.</p>
+        <ul class="diff">
+          <li><span class="tag">azure</span>Worked on the team's Microsoft Azure infrastructure, keeping environments consistent and changes reviewable.</li>
+          <li><span class="tag">ci/cd</span>Built and maintained Azure DevOps Services pipelines so code moved from commit to cloud without hand-holding.</li>
+          <li><span class="tag">async</span>Shipped across a 9.5-hour time difference: clear handoffs, written context, and changes that were safe to merge while the other side slept.</li>
+        </ul>
+      </div>
+      <div class="commit">
+        <div class="h">commit 9d04c7a</div>
+        <h3>Cloud Engineer Intern · <span class="org">Claw Enterprises</span></h3>
+        <div class="meta">May 2024 – Jul 2024 · India, remote</div>
+        <p class="blurb">Where it started. The first time my code touched real infrastructure.</p>
+        <ul class="diff">
+          <li><span class="tag">cloud</span>First hands-on cloud and DevOps role: provisioning resources, wiring up environments and learning how production actually behaves.</li>
+          <li><span class="tag">github</span>Automated build and deploy workflows around GitHub, turning manual steps into repeatable pipelines.</li>
+          <li><span class="tag">origin</span>The internship that pointed me at DevOps for good, and the one that led to the next job.</li>
+        </ul>
+      </div>
+      <div class="commit">
+        <div class="h">commit 2f6b8d1</div>
+        <h3>Technical Head · <span class="org">CSI – TCET</span></h3>
+        <div class="meta">Aug 2022 – Jul 2023 · student chapter</div>
+        <ul class="diff"><li><span class="tag">lead</span>Led the technical team of the Computer Society of India chapter at TCET.</li></ul>
+      </div>
+      <div class="commit" style="padding-bottom:0">
+        <div class="h">commit 0c4b1e2 <span class="d">(root)</span></div>
+        <h3>B.E. Computer Engineering · <span class="org">Thakur College of Engineering &amp; Technology</span></h3>
+        <div class="meta">Dec 2021 – May 2025 · Mumbai · CGPA 9.42 / 10 · Cloud, DevOps, AIML</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="debug">
+    <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">./case-file --open</span></div>
+    <h2>Find the <em>dropped</em> packet</h2>
+    <p class="lede">This is what most of my days look like. A request is failing somewhere on the path. Inspect each hop, read the evidence, then name the culprit.</p>
+    <div class="case">
+      <div class="case-head">
+        <div><span class="a" id="caseid">CASE #0x01</span> · <span id="casetitle"></span></div>
+        <div class="small">hops inspected: <span id="caseinsp">0</span> · solved: <span id="casesolved">0</span></div>
+      </div>
+      <div class="hops" id="hops"></div>
+      <pre class="evidence" id="evidence" aria-live="polite"></pre>
+      <div class="case-act">
+        <button class="btn" id="accuse" disabled>accuse this hop</button>
+        <button class="chip" id="nextcase">next case →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">ls -l ~/projects</span></div>
+    <h2>Projects</h2>
+    <div class="feat">
+      <article class="fp">
+        <div class="perm">May 2026 · internal platform</div>
+        <h3>DB Dashboard</h3>
+        <p>Centralised database access and governance portal: automated DB user creation, role-based access requests, scheduled expiry tracking, email alerts and PII data-classification schemas.</p>
+        <div class="flow" aria-hidden="true">request → approve → <span class="p">grant(ttl)</span> → alert → <span class="a">revoke</span></div>
+      </article>
+      <article class="fp">
+        <div class="perm">Jan 2025 · developer tool</div>
+        <h3>FlowOps</h3>
+        <p>Visual CI/CD workflow builder. Drag and drop pipeline steps and it generates GitHub Actions YAML, taking pipeline setup for non-technical users from hours to minutes.</p>
+        <div class="flow" aria-hidden="true">[checkout] → [build] → [test] → <span class="p">workflow.yml</span></div>
+      </article>
+    </div>
+    <div class="cmd" style="margin-top:22px"><span class="p">om@omniscient:~$</span><span class="c">ls ~/github/Aisu2635</span></div>
+    <div class="grid" id="pgrid"></div>
+  </section>
+
+  <section id="garage">
+    <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">cd ~/garage &amp;&amp; ls</span></div>
+    <h2>Off the clock: <em>F1</em> and two wheels</h2>
+    <div class="garage">
+      <div class="rig" id="f1">
+        <h3>./lights-out</h3>
+        <div class="sub">Five reds, then go. Click the gantry (or press Enter on it) when the lights go out.</div>
+        <div class="lights" id="gantry" tabindex="0" role="button" aria-label="F1 start lights reaction test"></div>
+        <div class="readout">
+          <div><div class="big" id="rt">0.000</div><div class="small" id="rtmsg">Click to start</div></div>
+          <div class="small" style="text-align:right">personal best<br><span class="a" id="best">--</span><br>F1 drivers: ~0.200 s</div>
+        </div>
+      </div>
+
+      <div class="rig shift" id="ride">
+        <h3>./throttle</h3>
+        <div class="sub">Hold the button (or Space while it's focused) to twist the grip. Release to coast.</div>
+        <div class="dash">
+          <div><b id="gear">N</b><small>gear</small></div>
+          <div><b id="spd">0</b><small>km/h</small></div>
+          <div><b id="rpm">1200</b><small>rpm</small></div>
+        </div>
+        <div class="tacho" id="tacho" aria-hidden="true"></div>
+        <button class="btn" id="throttle">hold to ride</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">cat contact.yaml</span></div>
+    <h2>Let's talk</h2>
+    <div class="contact">
+      <div class="row"><span class="k">github:</span><a href="https://github.com/Aisu2635" target="_blank" rel="noopener">github.com/Aisu2635</a></div>
+      <div class="row" id="lirow" hidden><span class="k">linkedin:</span><a id="lilink" target="_blank" rel="noopener"></a></div>
+      <div class="row"><span class="k">email:</span><span id="mail">om.hinge.2635@gmail.com</span><button class="copy" data-copy="om.hinge.2635@gmail.com">copy</button></div>
+      <div class="row"><span class="k">status:</span><span class="p">open to DevOps · Cloud · SRE · Platform roles</span></div>
+    </div>
+  </section>
+
+  <footer>Served from Cloudflare Pages, shipped by GitHub Actions on every push to main. The background is a live mesh: move your cursor to join it, click to send packets<button class="egg" id="egg" aria-label="Easter egg">.</button><br><span class="d hint">psst: some engineers only show up after dark. there's one command the help menu won't tell you about.</span></footer>
+  <div class="night" id="night" hidden>
+    <canvas class="sky" id="nightcv" aria-hidden="true"></canvas>
+    <div class="nightmsg"><div class="big">03:00 IST</div><p>The pager went off. The city is asleep. The bats are out.</p><p class="d">Some engineers sleep. Some are on-call.</p><button class="btn" id="dawn">wait for dawn</button></div>
+  </div>
+</main>
+
+<div class="tmux" aria-label="Section navigation">
+  <span class="sess">[om]</span>
+  <nav id="tnav">
+    <a href="#top" data-s="top">0:shell</a>
+    <a href="#about" data-s="about">1:about</a>
+    <a href="#skills" data-s="skills">2:stack</a>
+    <a href="#experience" data-s="experience">3:exp</a>
+    <a href="#debug" data-s="debug">4:trace</a>
+    <a href="#projects" data-s="projects">5:projects</a>
+    <a href="#garage" data-s="garage">6:garage</a>
+    <a href="#contact" data-s="contact">7:contact</a>
+  </nav>
+  <span class="clk" id="clk"></span>
+</div>
+
+<script>
+/* ---------- config ---------- */
+const CFG = {
+  github: "https://github.com/Aisu2635",
+  linkedin: "https://www.linkedin.com/in/om-hinge2635",
+  email: "om.hinge.2635@gmail.com"
+};
+const SKILLS = [
+  ["azure","cloud",1],["aws","cloud"],["gcp","cloud"],
+  ["kubernetes","orchestration"],["aks","orchestration"],["docker","orchestration"],["helm","orchestration"],
+  ["traefik","network"],["nginx","network"],["ipsec-vpn","network"],["azure-firewall","network"],["udr","network"],["vnet","network"],["nsg","network"],["azure-lb","network"],
+  ["azure-devops","cicd"],["gitlab-ci","cicd"],["github-actions","cicd"],
+  ["opentofu","iac"],["terraform","iac"],
+  ["prometheus","observability"],["grafana","observability"],
+  ["python","lang"],["bash","lang"],["go","lang"],["javascript","lang"],["c","lang"],
+  ["git","tools"],["jira","tools"],["confluence","tools"],["azure-cli","tools"],["aws-cli","tools"],["mongodb","tools"]
+];
+const PROJECTS = [
+  {n:"DynamicPricing",d:"Dynamic pricing in Python.",l:"Python",u:"DynamicPricing"},
+  {n:"Tincord",d:"JavaScript app.",l:"JavaScript",u:"Tincord"},
+  {n:"python-miniprojeck",d:"Trip itinerary maker that uses the OpenAI API to plan a trip from your destination, dates and activities.",l:"Python",u:"python-miniprojeck"},
+  {n:"tnp-website",d:"Source for the TCET Training & Placement Cell website (fork).",l:"Astro",u:"tnp-website"},
+  {n:"aisudots",d:"My dotfiles (fork).",l:"Shell",u:"aisudots"},
+  {n:"XCR-front",d:"Frontend for XCR.",l:"JavaScript",u:"XCR-front"}
+];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = {get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- linkedin ---------- */
+if (CFG.linkedin){ $("#lirow").hidden=false; $("#lilink").href=CFG.linkedin; $("#lilink").textContent=CFG.linkedin.replace(/^https?:\/\/(www\.)?/,""); }
+
+/* ---------- copy ---------- */
+document.addEventListener("click", e=>{
+  const b = e.target.closest("[data-copy]"); if(!b) return;
+  const t = b.dataset.copy;
+  const done = ()=>{ b.textContent="copied"; setTimeout(()=>b.textContent="copy",1400); };
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(done).catch(()=>{
+    const r=document.createRange(); r.selectNodeContents($("#mail")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent="selected";
+    setTimeout(()=>b.textContent="copy",1400);
+  });
+});
+
+/* ---------- skills table ---------- */
+const NS = ["all", ...new Set(SKILLS.map(s=>s[1]))];
+let curNs = "all";
+function renderSkills(ns){
+  curNs = ns;
+  $("#kcmd").textContent = ns==="all" ? "kubectl get skills --all-namespaces" : `kubectl get skills -n ${ns}`;
+  [...$("#tabs").children].forEach(t=>t.setAttribute("aria-selected", t.dataset.ns===ns));
+  const rows = SKILLS.filter(s=>ns==="all"||s[1]===ns);
+  $("#ktbody").innerHTML = rows.map((s,i)=>`<tr style="animation-delay:${i*22}ms"><td>${s[0]}</td><td class="d">${s[1]}</td><td>1/1</td><td class="st${s[2]?" pri":""}">${s[2]?"Running (primary)":"Running"}</td></tr>`).join("");
+}
+$("#tabs").innerHTML = NS.map(n=>`<button class="tab" role="tab" data-ns="${n}">${n}</button>`).join("");
+$("#tabs").addEventListener("click", e=>{const b=e.target.closest(".tab"); if(b) renderSkills(b.dataset.ns)});
+renderSkills("all");
+
+/* ---------- projects ---------- */
+$("#pgrid").innerHTML = PROJECTS.map(p=>`<a class="proj" href="${CFG.github}/${p.u}" target="_blank" rel="noopener">
+  <span class="perm">drwxr-xr-x  om  ${esc(p.l.toLowerCase())}</span>
+  <span class="nm">${esc(p.n)}/</span><span class="ds">${esc(p.d)}</span><span class="lang">● ${esc(p.l)}</span></a>`).join("")
+  + `<a class="proj" href="${CFG.github}?tab=repositories" target="_blank" rel="noopener"><span class="perm">lrwxrwxrwx  om  github</span><span class="nm">all-repos/ -&gt;</span><span class="ds">Everything else on GitHub.</span><span class="lang">● github.com/Aisu2635</span></a>`;
+
+/* ---------- clock + tmux active ---------- */
+function tick(){
+  const t = new Date().toLocaleTimeString("en-GB",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  $("#clk").innerHTML = `${t} <span class="tz">IST</span>`;
+}
+tick(); setInterval(tick,1000);
+const navLinks = [...document.querySelectorAll("#tnav a")];
+const io = new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ navLinks.forEach(a=>a.classList.toggle("cur", a.dataset.s===e.target.id)); } });
+},{rootMargin:"-45% 0px -50% 0px"});
+["top","about","skills","experience","debug","projects","garage","contact"].forEach(id=>io.observe(document.getElementById(id)));
+
+/* ---------- terminal ---------- */
+const out = $("#tout"), tin = $("#tin"), tbody = $("#tbody");
+const hist = []; let hi = 0;
+function print(html, cls){ const d=document.createElement("pre"); d.className="ln"+(cls?" "+cls:""); d.innerHTML=html; out.appendChild(d); tbody.scrollTop=tbody.scrollHeight; }
+function go(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:reduced?"auto":"smooth",block:"start"}); }
+const lnk = (u,t)=>`<a href="${u}" target="_blank" rel="noopener">${esc(t||u)}</a>`;
+
+const NEOFETCH = () => `<span class="p">      .--.          </span>  <span class="w">om</span>@<span class="w">omniscient</span>
+<span class="p">   .-(    ).        </span>  ---------
+<span class="p">  (___.__)__)       </span>  <span class="p">role</span>:    DevOps Engineer
+<span class="p">   |  |  |          </span>  <span class="p">org</span>:     Bajaj Finserv Health Ltd.
+<span class="p">  [n]-[n]-[n]       </span>  <span class="p">fleet</span>:   3–5 aks clusters · 100+ svcs
+<span class="p">                    </span>  <span class="p">cloud</span>:   azure (primary), aws, gcp
+<span class="p">                    </span>  <span class="p">orch</span>:    kubernetes, aks, helm, docker
+<span class="p">                    </span>  <span class="p">net</span>:     vnet, nsg, udr, firewall, ipsec
+<span class="p">                    </span>  <span class="p">iac</span>:     opentofu, terraform
+<span class="p">                    </span>  <span class="p">os</span>:      arch linux <span class="d">(btw)</span>
+<span class="p">                    </span>  <span class="p">hobbies</span>: f1, riding
+<span class="p">                    </span>  <span class="p">open to</span>: devops, cloud, sre, platform
+<span class="d">type </span><span class="p">help</span><span class="d"> to see what this shell can do.</span>`;
+
+const CMDS = {
+  help:{d:"list commands", f(){ print(Object.entries(CMDS).filter(([,v])=>!v.h).map(([k,v])=>`  <span class="p">${k.padEnd(11)}</span><span class="d">${v.d}</span>`).join("\n")); }},
+  whoami:{d:"who is om", f(){ print("Om Hinge. DevOps engineer in Pune. Azure-first, AKS at scale, happiest in the network layer."); }},
+  neofetch:{d:"system info", f(){ print(NEOFETCH()); }},
+  about:{d:"jump to about", f(){ print("opening about.md ..."); go("about"); }},
+  skills:{d:"kubectl get skills [ns]", f(a){ const ns=a[0]&&NS.includes(a[0])?a[0]:"all"; renderSkills(ns); print(`${SKILLS.filter(s=>ns==="all"||s[1]===ns).length} skills in <span class="a">${ns}</span>. namespaces: ${NS.join(", ")}`); go("skills"); }},
+  experience:{d:"git log career", f(){ print(`<span class="a">a1f3c09</span> <span class="p">(HEAD -> main)</span> Assoc. Software Dev (DevOps) @ Bajaj Finserv Health  <span class="d">Nov 2025–now</span>\n<span class="a">5b8e113</span> DevOps Intern @ Bajaj Finserv Health  <span class="d">Apr–Oct 2025</span>\n<span class="a">7e2d0b4</span> DevOps Engineer (Intern) @ Xora  <span class="d">Feb–Mar 2025</span>\n<span class="a">3c91fa0</span> Software Engineer DevOps @ Artha IT  <span class="d">Feb–Mar 2025</span>\n<span class="a">9d04c7a</span> Cloud Engineer Intern @ Claw Enterprises  <span class="d">May–Jul 2024</span>\n<span class="a">2f6b8d1</span> Technical Head @ CSI-TCET  <span class="d">2022–23</span>\n<span class="a">0c4b1e2</span> B.E. Computer Engg, TCET Mumbai (9.42 CGPA)`); go("experience"); }},
+  projects:{d:"ls ~/projects", f(){ print(`<span class="w">featured</span>\n<span class="p">${"DB Dashboard".padEnd(20)}</span><span class="d">DB access & governance platform</span>\n<span class="p">${"FlowOps".padEnd(20)}</span><span class="d">visual GitHub Actions builder</span>\n<span class="w">github</span>`); print(PROJECTS.map(p=>`<span class="p">${p.n.padEnd(20)}</span><span class="d">${p.l}</span>`).join("\n")); go("projects"); }},
+  f1:{d:"lights out reaction test", f(){ print("box box. heading to the grid ..."); go("garage"); setTimeout(()=>$("#gantry").focus({preventScroll:true}),500); }},
+  trace:{d:"solve a network case", f(){ print("pulling the case file ..."); go("debug"); }},
+  pacman:{d:"", h:1, f(){ print(`:: Synchronizing package databases...\n core is up to date\n extra is up to date\n:: Starting full system upgrade...\n resolving dependencies...\n Packages (3) kubectl-1.31  opentofu-1.8  coffee-∞\n<span class="p">:: Done. i use arch btw.</span>`); }},
+  ride:{d:"twist the throttle", f(){ print("helmet on. keys in."); go("garage"); setTimeout(()=>$("#throttle").focus({preventScroll:true}),500); }},
+  contact:{d:"how to reach me", f(){ print(`github:   ${lnk(CFG.github)}\n${CFG.linkedin?`linkedin: ${lnk(CFG.linkedin)}\n`:""}email:    ${CFG.email}`); go("contact"); }},
+  github:{d:"open my github", f(){ print(`→ ${lnk(CFG.github)}`); }},
+  linkedin:{d:"open my linkedin", f(){ print(CFG.linkedin?`→ ${lnk(CFG.linkedin)}`:`<span class="d">linkedin link not added yet</span>`); }},
+  ping:{d:"ping om", f(a){ const h=a[0]||"om"; let n=0; const t=setInterval(()=>{ n++; print(`64 bytes from ${esc(h)}: icmp_seq=${n} ttl=64 time=${(Math.random()*8+2).toFixed(2)} ms`); if(n===4){clearInterval(t); print(`<span class="d">--- ${esc(h)} ping statistics: 4 sent, 4 received, 0% loss ---</span>`);} },350); }},
+  ls:{d:"list files", f(){ print(`<span class="p">about.md  contact.yaml  career.log  projects/  garage/</span>`); }},
+  cat:{d:"cat <file>", h:1, f(a){ const m={"about.md":"about","contact.yaml":"contact","career.log":"experience"}; if(m[a[0]]) CMDS[m[a[0]]==="experience"?"experience":m[a[0]]].f([]); else print(`cat: ${esc(a[0]||"")}: No such file or directory`,"r"); }},
+  sudo:{d:"try it", f(a){ if(a.join(" ").includes("hire")) print(`<span class="p">[sudo] permission granted.</span> Send the offer to ${CFG.email} ✓`); else print(`om is not in the sudoers file. Try <span class="p">sudo hire om</span>.`); }},
+  date:{d:"time in IST", h:1, f(){ print(new Date().toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})+" IST"); }},
+  history:{d:"", h:1, f(){ print(hist.map((h,i)=>`${String(i+1).padStart(4)}  ${esc(h)}`).join("\n")||" "); }},
+  signal:{d:"", h:1, f(){ print(`<span class="a">signal lit.</span> <span class="d">the night shift has been summoned.</span>`); night(); }},
+  clear:{d:"clear the screen", f(){ out.innerHTML=""; }},
+  exit:{d:"", h:1, f(){ print("there is no exit. only git push."); }}
+};
+CMDS.kubectl = {h:1, f(a){ const i=a.indexOf("-n"); CMDS.skills.f(i>-1?[a[i+1]]:[]); }};
+CMDS.git = {h:1, f(){ CMDS.experience.f(); }};
+["batman","gotham","nightshift"].forEach(k=>CMDS[k]=CMDS.signal);
+
+function run(raw){
+  const line = raw.trim();
+  print(`<span class="p">om@omniscient:~$</span> ${esc(line)}`);
+  if(!line) return;
+  hist.push(line); hi = hist.length;
+  const [c,...a] = line.split(/\s+/);
+  const cmd = CMDS[c.toLowerCase()];
+  if(cmd) cmd.f(a); else print(`bash: ${esc(c)}: command not found. try <span class="p">help</span>`,"r");
+}
+tin.addEventListener("keydown", e=>{
+  if(e.key==="Enter"){ run(tin.value); tin.value=""; }
+  else if(e.key==="ArrowUp"){ if(hi>0){hi--; tin.value=hist[hi];} e.preventDefault(); }
+  else if(e.key==="ArrowDown"){ if(hi<hist.length-1){hi++; tin.value=hist[hi];} else {hi=hist.length; tin.value="";} e.preventDefault(); }
+  else if(e.key==="Tab"){ e.preventDefault(); const v=tin.value.toLowerCase(); const m=Object.keys(CMDS).filter(k=>!CMDS[k].h&&k.startsWith(v)); if(m.length===1) tin.value=m[0]+" "; else if(m.length) print(m.join("  "),"d"); }
+  else if(e.key==="l"&&e.ctrlKey){ e.preventDefault(); out.innerHTML=""; }
+});
+tbody.addEventListener("click", e=>{ if(!e.target.closest("a") && !getSelection().toString()) tin.focus({preventScroll:true}); });
+const quick = ["help","neofetch","skills","experience","trace","projects","f1","ride","contact","sudo hire om"];
+$("#chips").innerHTML = quick.map(q=>`<button class="chip">${q}</button>`).join("");
+$("#chips").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(b){ run(b.textContent); } });
+
+// boot: everything visible right away, lines arrive fast
+(function boot(){
+  const lines = [
+    `<span class="d">[  0.000] booting portfolio on omniscient ...</span>`,
+    `<span class="d">[  0.112] mounting /dev/cloud ... </span><span class="p">ok</span>`,
+    `<span class="d">[  0.204] ipsec tunnel0 up · bgp established ... </span><span class="p">ok</span>`,
+    `<span class="d">[  0.311] aks node pool ready (3/3) ... </span><span class="p">ok</span>`
+  ];
+  if(reduced){ lines.forEach(l=>print(l)); print(NEOFETCH()); return; }
+  let i=0; const t=setInterval(()=>{ if(i<lines.length) print(lines[i++]); else { clearInterval(t); print(NEOFETCH()); } },110);
+})();
+
+/* ---------- easter egg ---------- */
+let nightRAF=0;
+function night(){
+  const n=$("#night"); n.classList.remove("on"); n.hidden=false;
+  const cv=$("#nightcv"), ctx=cv.getContext("2d");
+  const W=240, H=Math.max(140,Math.min(420,Math.round(W*innerHeight/innerWidth)));
+  cv.width=W; cv.height=H; const img=ctx.createImageData(W,H), d=img.data;
+  const B=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+  const rnd=(i)=>{const x=Math.sin(i*127.1)*43758.5453;return x-Math.floor(x)};
+  // city skyline
+  const sky=[]; let x=0,k=0; while(x<W){ const w=6+Math.floor(rnd(k)*14), h=Math.floor(H*(.08+rnd(k+50)*.2)); for(let i=0;i<w&&x+i<W;i++) sky[x+i]=h; x+=w; k++; }
+  const win=new Set(); for(let i=0;i<W*H*.004;i++){ win.add(Math.floor(rnd(i+900)*W)+","+Math.floor(H-rnd(i+1700)*H*.26)); }
+  const stars=[]; for(let i=0;i<90;i++) stars.push([Math.floor(rnd(i+3)*W),Math.floor(rnd(i+7)*H*.7),rnd(i+11)*6]);
+  // value noise for clouds
+  const G=40, grid=[]; for(let i=0;i<(G+1)*(G+1);i++) grid.push(rnd(i+4000));
+  const vn=(u,v)=>{ u=((u%G)+G)%G; v=Math.max(0,Math.min(G-1,v)); const i=Math.floor(u),j=Math.floor(v),fu=u-i,fv=v-j,s=t=>t*t*(3-2*t);
+    const g=(a,b)=>grid[((b)*(G+1))+((a)%G)]; const a1=g(i,j)+(g(i+1,j)-g(i,j))*s(fu), a2=g(i,j+1)+(g(i+1,j+1)-g(i,j+1))*s(fu); return a1+(a2-a1)*s(fv); };
+  const lx=Math.round(W*.3), ly=H-2, cx=W*.64, cy=H*.27, rx=W*.17, ry=Math.min(H*.13,W*.11);
+  const nodes=[[0,-.36],[-.55,.3],[.55,.3],[-.95,.05],[.95,.05],[0,-.72]], big=[.17,.17,.17,.085,.085,.085];
+  const edges=[[0,1,.055],[0,2,.055],[1,2,.055],[1,3,.035],[2,4,.035],[0,5,.035]];
+  const segd=(px,py,ax,ay,bx,by)=>{const vx=bx-ax,vy=by-ay,t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/(vx*vx+vy*vy)));return Math.hypot(px-ax-vx*t,py-ay-vy*t)};
+  const SPR=[["X.......X","XX.XXX.XX",".XXXXXXX.","...X.X..."],["...XXX...",".XXXXXXX.","XX.X.X.XX","X.......X"]];
+  const bats=[]; for(let i=0;i<7;i++) bats.push({x:rnd(i+300)*W,y:H*(.1+rnd(i+310)*.45),v:(rnd(i+320)>.5?1:-1)*(10+rnd(i+330)*14),f:2+rnd(i+340)*2,p:rnd(i+350)*6,a:2+rnd(i+360)*4,o:i%2});
+  const t0=performance.now();
+  cancelAnimationFrame(nightRAF);
+  function frame(now){
+    const t=Math.max(0,(now-t0)/1000);
+    const fl=[0,.7,0,.9,.2,1]; const lamp=t>1.1?1:fl[Math.min(5,Math.floor(t/1.1*6))];
+    const sx=Math.sin(t*.5)*2, sy=Math.cos(t*.4)*1;
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const o=(y*W+x)*4, th=B[y&3][x&3]/16;
+      let r=3+y/H*10, g=5+y/H*9, b=12+y/H*16;
+      for(const s0 of stars) if(s0[0]===x&&s0[1]===y){ const tw=.5+.5*Math.sin(t*2+s0[2]); r=g=b=120+100*tw; b+=20; }
+      // clouds
+      const cl=vn(x/16+t*.25,y/10)*.65+vn(x/7-t*.15,y/5)*.35, cm=Math.max(0,(cl-.55)*2.4)*(1-y/H*.4);
+      if(cm>th){ r=26+cm*30; g=30+cm*32; b=44+cm*36; }
+      // beam
+      if(lamp>0){
+        const ex=cx-lx, ey=cy-ly, len=Math.hypot(ex,ey), ux=ex/len, uy=ey/len;
+        const px=x-lx, py=y-ly, along=px*ux+py*uy, perp=Math.abs(-px*uy+py*ux);
+        if(along>0&&along<len){ const half=2.5+along/len*rx*.9; if(perp<half){ const k2=(.55-.3*along/len)*lamp*(cm>th?1.5:1); if(k2>th*.8){ r+=150*k2; g+=130*k2; b+=60*k2; } } }
+        // disc
+        const dx=(x-cx)/rx, dy=(y-cy)/ry, dd=dx*dx+dy*dy;
+        if(dd<1.25&&dd>=1){ if(.25*lamp>th){ r+=70; g+=60; b+=20; } }
+        if(dd<1){
+          let inten=(1-dd*.35)*lamp; if(dd>.82&&th>.5) inten*=.75;
+          r=255*inten; g=222*inten; b=120*inten;
+          if(cm>th) { r*=.85; g*=.85; b*=.8; }
+        }
+      }
+      // skyline
+      if(H-y<=sky[x]){ r=2;g=3;b=5; if(win.has(x+","+y)){ const on=rnd(x*7+y)>.3; if(on){ if(rnd(x+y*3)>.7){r=92;g=242;b=138;} else {r=255;g=179;b=71;} } } }
+      // lamp
+      if(Math.abs(x-lx)<=3&&y>=ly-3){ r=40;g=44;b=52; if(y===ly-3&&lamp>0){ r=255;g=244;b=196; } }
+      d[o]=r; d[o+1]=g; d[o+2]=b; d[o+3]=255;
+    }
+    // bats
+    const fr=Math.floor(t*6)%2;
+    for(const bt of bats){
+      const bx=Math.floor(((bt.x+bt.v*t)%(W+30)+W+30)%(W+30)-15), by=Math.floor(bt.y+Math.sin(t*bt.f+bt.p)*bt.a);
+      const spr=SPR[(fr+bt.o)%2];
+      for(let j=0;j<spr.length;j++) for(let i=0;i<spr[j].length;i++){ if(spr[j][i]!=="X") continue;
+        const xx=bt.v>0?bx+i:bx+spr[j].length-1-i, yy=by+j; if(xx<0||yy<0||xx>=W||yy>=H) continue;
+        const o=(yy*W+xx)*4; const lit=d[o]>120; d[o]=lit?14:0; d[o+1]=lit?10:0; d[o+2]=lit?6:2; }
+    }
+    ctx.putImageData(img,0,0);
+    if(!n.hidden) nightRAF=requestAnimationFrame(frame);
+  }
+  nightRAF=requestAnimationFrame(frame);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>n.classList.add("on"))); setTimeout(()=>$("#dawn").focus({preventScroll:true}),1500);
+}
+$("#dawn").addEventListener("click",()=>{ const n=$("#night"); n.classList.remove("on"); n.hidden=true; cancelAnimationFrame(nightRAF); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("#night").hidden=true; cancelAnimationFrame(nightRAF); } });
+
+/* ---------- network case file ---------- */
+(function(){
+  const HOPS=[["pod","aks-prod/api"],["nsg","snet-aks"],["udr","rt-spoke"],["fw","azfw-hub"],["vpn","ipsec-tun0"],["onprem","10.20.4.15"]];
+  const OK={
+    pod:"$ kubectl exec api-7d9 -- nc -zv 10.20.4.15 27017\nnc: connect to 10.20.4.15 port 27017 (tcp) timed out\n$ kubectl exec api-7d9 -- nslookup db.corp.local\nAddress: 10.20.4.15   # DNS resolves fine. pod is healthy.",
+    nsg:"$ az network nic list-effective-nsg ...\n  AllowVnetOutBound      65000  Allow  *   VirtualNetwork\n  AllowAksToOnprem        200   Allow  TCP 27017  10.20.0.0/16\n# outbound to on-prem is allowed.",
+    udr:"$ az network nic show-effective-route-table ...\n  10.20.0.0/16  VirtualAppliance  10.0.1.4 (azfw)\n  0.0.0.0/0     VirtualAppliance  10.0.1.4\n# traffic is steered to the firewall as designed.",
+    fw:"AZFW NetworkRule: TCP 10.1.8.23:41522 -> 10.20.4.15:27017\n  Action: Allow  Rule: aks-to-onprem-mongo\n# firewall lets it through.",
+    vpn:"$ az network vpn-connection show --name cn-onprem\n  connectionStatus: Connected  ingressBytes: 18.2 GB  egressBytes: 22.7 GB\n# tunnel up, child SAs healthy.",
+    onprem:"onprem-fw# show log | match 10.1.8.23\n  permit tcp 10.1.8.23 -> 10.20.4.15:27017\n  mongod: connection accepted from 10.1.8.23\n# the far end never complains when packets arrive."
+  };
+  const CASES=[
+    {t:"api pods in aks-prod can't reach the on-prem MongoDB",bad:"nsg",e:"$ az network nic list-effective-nsg ...\n  DenyAllOutboundCustom   150   Deny   *   *\n  AllowAksToOnprem        200   Allow  TCP 27017  10.20.0.0/16\n# a deny at priority 150 wins before the allow at 200.",fix:"Someone added a catch-all deny at a higher priority. Move AllowAksToOnprem above it."},
+    {t:"new spoke can't reach on-prem after Friday's change",bad:"udr",e:"$ az network nic show-effective-route-table ...\n  0.0.0.0/0     Internet  -\n  (no route for 10.20.0.0/16)\n# packets leave via the internet and never hit the firewall or tunnel.",fix:"The route table was never associated with the new subnet. Associate rt-spoke so 10.20.0.0/16 goes via the firewall."},
+    {t:"Mongo connections from AKS time out, only on port 27017",bad:"fw",e:"AZFW NetworkRule: TCP 10.1.8.23:41522 -> 10.20.4.15:27017\n  Action: Deny  Policy: hub-policy  Reason: no rule matched\n# the rule collection only allows 27018.",fix:"Typo in the firewall rule: 27018 instead of 27017. Fix the port in the rule collection."},
+    {t:"on-prem is unreachable from the new 10.1.8.0/22 pod range",bad:"vpn",e:"$ az network vpn-connection show --name cn-onprem\n  connectionStatus: Connected\n  IKEv2 child SA for 10.1.8.0/22 <-> 10.20.0.0/16 failed: TS_UNACCEPTABLE\n# phase 1 up, phase 2 traffic selectors don't match.",fix:"The tunnel is up but the new pod CIDR isn't in the on-prem traffic selectors. Add 10.1.8.0/22 on both ends."},
+    {t:"only some pods can reach on-prem, others time out",bad:"onprem",e:"onprem-fw# show log | match 10.1.8.\n  permit tcp 10.1.8.23 -> 10.20.4.15:27017\n  deny   tcp 10.1.9.140 -> 10.20.4.15:27017  (acl: AZURE-IN)\n# on-prem ACL still allows only the old /24.",fix:"The on-prem ACL was written for the old /24. Widen it to the full /22 pod range."}
+  ];
+  let ci=Math.floor(Math.random()*CASES.length), sel=null, insp=0, solved=0, done=false, num=1;
+  const hopsEl=$("#hops"), ev=$("#evidence"), acc=$("#accuse");
+  function load(){
+    const c=CASES[ci]; sel=null; insp=0; done=false; acc.disabled=true;
+    $("#caseid").textContent="CASE #0x"+num.toString(16).padStart(2,"0").toUpperCase(); $("#casetitle").textContent=c.t; $("#caseinsp").textContent=0;
+    hopsEl.innerHTML=HOPS.map(([k,l],i)=>(i?'<span class="arrow">→</span>':"")+`<button class="hop" data-k="${k}">${k}<small>${l}</small></button>`).join("");
+    ev.innerHTML='<span class="d">Click a hop to inspect it. When you know where the packet dies, accuse that hop.</span>';
+  }
+  hopsEl.addEventListener("click",e=>{
+    const b=e.target.closest(".hop"); if(!b||done) return;
+    const k=b.dataset.k, c=CASES[ci];
+    if(!b.classList.contains("seen")){ insp++; $("#caseinsp").textContent=insp; }
+    hopsEl.querySelectorAll(".hop").forEach(h=>h.classList.remove("sel")); b.classList.add("seen","sel"); sel=k; acc.disabled=false;
+    ev.textContent = k===c.bad ? c.e : OK[k];
+  });
+  acc.addEventListener("click",()=>{
+    if(!sel||done) return; const c=CASES[ci]; const b=hopsEl.querySelector(`[data-k="${sel}"]`);
+    if(sel===c.bad){ done=true; solved++; $("#casesolved").textContent=solved; b.classList.add("bad");
+      hopsEl.querySelectorAll(".hop").forEach(h=>{ if(h!==b) h.classList.add("ok"); });
+      ev.innerHTML=`<span class="p">case closed in ${insp} inspection${insp>1?"s":""}.</span>\n${esc(c.fix)}`; acc.disabled=true;
+    } else { b.classList.add("ok"); ev.innerHTML=`<span class="r">wrong suspect.</span> ${sel} checks out. keep digging.`; }
+  });
+  $("#nextcase").addEventListener("click",()=>{ ci=(ci+1)%CASES.length; num++; load(); });
+  load();
+})();
+
+/* ---------- F1 lights out ---------- */
+(function(){
+  const g = $("#gantry"); const bulbs=[];
+  for(let i=0;i<5;i++){ const p=document.createElement("div"); p.className="pod"; for(let j=0;j<2;j++){ const b=document.createElement("div"); b.className="bulb"; p.appendChild(b); if(j===1) bulbs.push(b); else bulbs.push(b); } g.appendChild(p); }
+  const cols = [...g.children];
+  let state="idle", timers=[], goAt=0;
+  const rt=$("#rt"), msg=$("#rtmsg"), best=$("#best");
+  let pb = parseFloat(store.get("om_f1_best")); if(pb) best.textContent=pb.toFixed(3)+" s";
+  const setCol=(i,on)=>cols[i].querySelectorAll(".bulb").forEach(b=>b.classList.toggle("on",on));
+  const reset=()=>{ timers.forEach(clearTimeout); timers=[]; cols.forEach((_,i)=>setCol(i,false)); };
+  function start(){
+    reset(); state="arming"; rt.classList.remove("bad"); rt.textContent="0.000"; msg.textContent="wait for lights out ...";
+    for(let i=0;i<5;i++) timers.push(setTimeout(()=>setCol(i,true), 600+i*900));
+    const hold = 600+4*900 + 400 + Math.random()*2600;
+    timers.push(setTimeout(()=>{ cols.forEach((_,i)=>setCol(i,false)); state="go"; goAt=performance.now(); }, hold));
+  }
+  function hit(){
+    if(state==="idle"||state==="done") return start();
+    if(state==="arming"){ reset(); state="done"; rt.textContent="JUMP"; rt.classList.add("bad"); msg.textContent="jump start · drive-through penalty. click to retry"; return; }
+    if(state==="go"){ const t=(performance.now()-goAt)/1000; state="done"; rt.textContent=t.toFixed(3);
+      if(!pb||t<pb){ pb=t; store.set("om_f1_best",String(t)); best.textContent=t.toFixed(3)+" s"; msg.textContent="purple sector! new personal best. click to go again"; }
+      else msg.textContent=(t<0.25?"pole position pace.":t<0.35?"solid launch.":"bogged down off the line.")+" click to go again";
+    }
+  }
+  g.addEventListener("pointerdown", e=>{ e.preventDefault(); hit(); });
+  g.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); hit(); } });
+})();
+
+/* ---------- Bike throttle ---------- */
+(function(){
+  const btn=$("#throttle"), rig=$("#ride");
+  const RED=11500, IDLE=1200, ratios=[0,2.6,1.9,1.5,1.25,1.08,0.96];
+  let rpm=IDLE, gear=0, speed=0, held=false, last=performance.now(), shiftCut=0;
+  const gearEl=$("#gear"), spdEl=$("#spd"), rpmEl=$("#rpm"), tach=$("#tacho");
+  function draw(){
+    const n=30, f=Math.round((rpm/12000)*n); let s="";
+    for(let i=0;i<n;i++){ const ch=i<f?"█":"░"; const cls=i>=26?"hot":i>=21?"warm":""; s+=cls?`<span class="${cls}">${ch}</span>`:ch; }
+    tach.innerHTML = `[${s}]\n 0    2    4    6    8   10  12 x1000`;
+    gearEl.textContent = gear?gear:"N"; spdEl.textContent=Math.round(speed); rpmEl.textContent=Math.round(rpm/10)*10;
+  }
+  function loop(now){
+    const dt=Math.min(.05,(now-last)/1000); last=now;
+    if(held){
+      if(gear===0) gear=1;
+      if(shiftCut>0){ shiftCut-=dt; }
+      else rpm += (9000/ratios[gear]*0.45 + 1500) * dt * (gear===1?1.6:1);
+      if(rpm>=RED && gear<6){ gear++; rpm*=ratios[gear]/ratios[gear-1]; shiftCut=.12; rig.classList.add("flash"); setTimeout(()=>rig.classList.remove("flash"),110); }
+      rpm=Math.min(rpm,RED+200);
+    } else {
+      rpm -= 2600*dt;
+      if(gear>1 && rpm<4200){ gear--; rpm*=ratios[gear]/ratios[gear+1]; }
+      if(rpm<=IDLE){ rpm=IDLE; if(speed<3){ gear=0; } }
+    }
+    speed = gear? Math.max(0,(rpm-IDLE*.6)/1000*(28/ratios[gear])*.62) : Math.max(0,speed-40*dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+  const on=e=>{ e.preventDefault(); held=true; btn.textContent="riding ..."; };
+  const off=()=>{ held=false; btn.textContent="hold to ride"; };
+  btn.addEventListener("pointerdown", on);
+  ["pointerup","pointerleave","pointercancel","blur"].forEach(ev=>btn.addEventListener(ev, off));
+  btn.addEventListener("keydown", e=>{ if((e.key===" "||e.key==="Enter")&&!e.repeat) on(e); });
+  btn.addEventListener("keyup", e=>{ if(e.key===" "||e.key==="Enter") off(); });
+  btn.addEventListener("contextmenu", e=>e.preventDefault());
+  draw(); requestAnimationFrame(loop);
+})();
+
+/* ---------- Network + cloud background ---------- */
+(function(){
+  const cv=$("#net"), ctx=cv.getContext("2d");
+  let W=0,H=0,DPR=1, nodes=[], packets=[], clouds=[];
+  const mouse={x:-999,y:-999,on:false};
+  const LABELS=["aks-prod","vnet-hub","ipsec-tun0","traefik","fw-01","prom","grafana","udr-egress","nsg-app","lb-int","helm","gitlab-runner","tofu-state","bgp-peer"];
+  const G="92,242,138", A="255,179,71";
+  function resize(){
+    DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight;
+    cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+    const N=Math.max(26,Math.min(90,Math.round(W*H/16000)));
+    nodes=Array.from({length:N},(_,i)=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,
+      r:i<LABELS.length?2.6:1.5,label:i<LABELS.length&&W>620?LABELS[i]:null}));
+    clouds=[["azure/centralindia",.18,.22],["aws/ap-south-1",.72,.55],["gcp/asia-south1",.35,.82]].map(([n,x,y],i)=>({n,x:x*W,y:y*H,s:Math.min(W,900)/900*(1+i*.12),v:.06+i*.03}));
+    packets=[];
+  }
+  addEventListener("resize",resize); resize();
+  addEventListener("pointermove",e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.on=true});
+  document.addEventListener("pointerleave",()=>{mouse.on=false;mouse.x=mouse.y=-999});
+  addEventListener("pointerdown",e=>{
+    if(e.target.closest("button,a,input,.lights,.term,#throttle")) return;
+    let best=null,bd=1e9; nodes.forEach(n=>{const d=(n.x-e.clientX)**2+(n.y-e.clientY)**2; if(d<bd){bd=d;best=n}});
+    if(!best) return;
+    nodes.filter(n=>n!==best&&Math.hypot(n.x-best.x,n.y-best.y)<220).slice(0,12).forEach(n=>packets.push({a:best,b:n,t:0,sp:.012+Math.random()*.01,amber:true,hops:2}));
+  });
+  const LINK=150;
+  function cloudPath(c){
+    const s=c.s*1.0; ctx.beginPath();
+    ctx.moveTo(c.x-90*s,c.y+20*s);
+    ctx.bezierCurveTo(c.x-130*s,c.y+20*s,c.x-130*s,c.y-40*s,c.x-80*s,c.y-38*s);
+    ctx.bezierCurveTo(c.x-75*s,c.y-90*s,c.x+5*s,c.y-95*s,c.x+20*s,c.y-55*s);
+    ctx.bezierCurveTo(c.x+50*s,c.y-85*s,c.x+110*s,c.y-60*s,c.x+95*s,c.y-20*s);
+    ctx.bezierCurveTo(c.x+140*s,c.y-15*s,c.x+135*s,c.y+22*s,c.x+95*s,c.y+20*s);
+    ctx.closePath();
+  }
+  function neighbors(n){ return nodes.filter(m=>m!==n&&Math.abs(m.x-n.x)<LINK&&Math.abs(m.y-n.y)<LINK&&Math.hypot(m.x-n.x,m.y-n.y)<LINK); }
+  let frame=0;
+  function step(){
+    frame++;
+    ctx.clearRect(0,0,W,H);
+    // dot grid
+    ctx.fillStyle=`rgba(${G},.05)`;
+    for(let x=12;x<W;x+=28) for(let y=12;y<H;y+=28) ctx.fillRect(x,y,1,1);
+    // clouds
+    ctx.setLineDash([3,6]); ctx.lineWidth=1;
+    clouds.forEach(c=>{
+      if(!reduced) c.x+=c.v; if(c.x-160*c.s>W) c.x=-160*c.s;
+      cloudPath(c); ctx.strokeStyle=`rgba(${G},.16)`; ctx.stroke(); ctx.fillStyle=`rgba(${G},.018)`; ctx.fill();
+      ctx.font="11px IBM Plex Mono, monospace"; ctx.fillStyle=`rgba(${G},.32)`; ctx.fillText(c.n,c.x-60*c.s,c.y+2*c.s);
+    });
+    ctx.setLineDash([]);
+    // move nodes
+    nodes.forEach(n=>{
+      if(!reduced){ n.x+=n.vx; n.y+=n.vy; }
+      if(n.x<0||n.x>W) n.vx*=-1; if(n.y<0||n.y>H) n.vy*=-1;
+      if(mouse.on){ const dx=n.x-mouse.x, dy=n.y-mouse.y, d=Math.hypot(dx,dy); if(d<90&&d>0){ n.x+=dx/d*.6; n.y+=dy/d*.6; } }
+    });
+    // links
+    for(let i=0;i<nodes.length;i++){ const a=nodes[i];
+      for(let j=i+1;j<nodes.length;j++){ const b=nodes[j]; const dx=a.x-b.x, dy=a.y-b.y; if(Math.abs(dx)>LINK||Math.abs(dy)>LINK) continue;
+        const d=Math.hypot(dx,dy); if(d<LINK){ ctx.strokeStyle=`rgba(${G},${(1-d/LINK)*.22})`; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); } }
+      if(mouse.on){ const d=Math.hypot(a.x-mouse.x,a.y-mouse.y); if(d<200){ ctx.strokeStyle=`rgba(${A},${(1-d/200)*.45})`; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(mouse.x,mouse.y); ctx.stroke(); } }
+    }
+    // nodes
+    nodes.forEach(n=>{
+      ctx.fillStyle=n.label?`rgba(${G},.85)`:`rgba(${G},.45)`; ctx.fillRect(n.x-n.r,n.y-n.r,n.r*2,n.r*2);
+      if(n.label){ ctx.font="10px IBM Plex Mono, monospace"; ctx.fillStyle=`rgba(${G},.38)`; ctx.fillText(n.label,n.x+6,n.y-5); }
+    });
+    // cursor gateway
+    if(mouse.on){ ctx.strokeStyle=`rgba(${A},.7)`; ctx.strokeRect(mouse.x-5,mouse.y-5,10,10); ctx.font="10px IBM Plex Mono, monospace"; ctx.fillStyle=`rgba(${A},.7)`; ctx.fillText("you@gateway",mouse.x+9,mouse.y+14); }
+    // spawn packets
+    if(!reduced && frame%14===0 && packets.length<60){ const a=nodes[Math.random()*nodes.length|0]; const nb=neighbors(a); if(nb.length) packets.push({a,b:nb[Math.random()*nb.length|0],t:0,sp:.008+Math.random()*.012,hops:3}); }
+    // packets
+    packets=packets.filter(p=>{
+      p.t+=p.sp; if(p.t>=1){ if(p.hops>0){ const nb=neighbors(p.b).filter(m=>m!==p.a); if(nb.length){ p.a=p.b; p.b=nb[Math.random()*nb.length|0]; p.t=0; p.hops--; return true; } } return false; }
+      const x=p.a.x+(p.b.x-p.a.x)*p.t, y=p.a.y+(p.b.y-p.a.y)*p.t; const c=p.amber?A:G;
+      ctx.fillStyle=`rgba(${c},.95)`; ctx.fillRect(x-2,y-2,4,4);
+      ctx.fillStyle=`rgba(${c},.25)`; ctx.fillRect(x-4,y-4,8,8);
+      return true;
+    });
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>
