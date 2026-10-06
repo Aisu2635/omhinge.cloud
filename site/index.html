@@ -188,6 +188,12 @@ footer{color:var(--dim);font-size:12px}
 .night.on .nightmsg{opacity:1}
 .nightmsg .big{color:var(--amber)}
 .nightmsg p{margin:0}
+.ctas{display:flex;flex-wrap:wrap;gap:8px}
+.cta{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1px solid var(--green);background:var(--green);color:var(--bg);font-weight:600;font-size:13px;border-bottom:1px solid var(--green)}
+.cta:hover,.cta:focus-visible{background:transparent;color:var(--green)}
+.cta.ghost{background:transparent;color:var(--green);font-weight:500;border-color:var(--green-d)}
+.cta.ghost:hover,.cta.ghost:focus-visible{background:var(--green);color:var(--bg)}
+@media (max-width:560px){ .cta{padding:10px 14px} }
 /* tmux bar */
 .tmux{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--green);color:var(--bg);font-size:12px;display:flex;align-items:center;gap:2px;padding:0 10px;padding-bottom:env(safe-area-inset-bottom,0px);white-space:nowrap}
 .tmux .sess{font-weight:600;padding:3px 10px 3px 0}
@@ -264,6 +270,11 @@ footer{color:var(--dim);font-size:12px}
       <span class="live"><b>DevOps Engineer</b> @ Bajaj Finserv Health</span>
       <span>Network troubleshooting · Azure · AKS</span>
       <span>Pune, India · IST</span>
+    </div>
+    <div class="ctas">
+      <a class="cta" href="/Om_Hinge_Resume.pdf" download="Om_Hinge_Resume.pdf" data-resume><span aria-hidden="true">↓</span> resume.pdf</a>
+      <a class="cta ghost" href="https://github.com/Aisu2635" target="_blank" rel="noopener">github</a>
+      <a class="cta ghost" href="https://www.linkedin.com/in/om-hinge2635" target="_blank" rel="noopener">linkedin</a>
     </div>
 
     <div class="term" id="term">
@@ -453,6 +464,7 @@ footer{color:var(--dim);font-size:12px}
     <h2>Let's talk</h2>
     <div class="contact">
       <div class="row"><span class="k">github:</span><a href="https://github.com/Aisu2635" target="_blank" rel="noopener">github.com/Aisu2635</a></div>
+      <div class="row"><span class="k">resume:</span><a href="/Om_Hinge_Resume.pdf" download="Om_Hinge_Resume.pdf">Om_Hinge_Resume.pdf</a><span class="d">PDF · 1 page</span></div>
       <div class="row" id="lirow" hidden><span class="k">linkedin:</span><a id="lilink" target="_blank" rel="noopener"></a></div>
       <div class="row"><span class="k">email:</span><span id="mail">om.hinge.2635@gmail.com</span><button class="copy" data-copy="om.hinge.2635@gmail.com">copy</button></div>
       <div class="row"><span class="k">status:</span><span class="p">open to DevOps · Cloud · SRE · Platform roles</span></div>
@@ -486,7 +498,8 @@ footer{color:var(--dim);font-size:12px}
 const CFG = {
   github: "https://github.com/Aisu2635",
   linkedin: "https://www.linkedin.com/in/om-hinge2635",
-  email: "om.hinge.2635@gmail.com"
+  email: "om.hinge.2635@gmail.com",
+  resume: "/Om_Hinge_Resume.pdf"
 };
 const SKILLS = [
   ["azure","cloud",1],["aws","cloud"],["gcp","cloud"],
@@ -604,6 +617,9 @@ const CMDS = {
   pacman:{d:"", h:1, f(){ print(`:: Synchronizing package databases...\n core is up to date\n extra is up to date\n:: Starting full system upgrade...\n resolving dependencies...\n Packages (3) kubectl-1.31  opentofu-1.8  coffee-∞\n<span class="p">:: Done. i use arch btw.</span>`); }},
   ride:{d:"twist the throttle", f(){ print("helmet on. keys in."); go("garage"); setTimeout(()=>$("#throttle").focus({preventScroll:true}),500); }},
   contact:{d:"how to reach me", f(){ print(`github:   ${lnk(CFG.github)}\n${CFG.linkedin?`linkedin: ${lnk(CFG.linkedin)}\n`:""}email:    ${CFG.email}`); go("contact"); }},
+  resume:{d:"download my resume", f(){
+    print(`<span class="d">$ curl -O https://omhinge.cloud/Om_Hinge_Resume.pdf</span>\n  % Total    % Received   Xferd\n100  1 page   100  1 page    <span class="p">done</span>\nsaved → Om_Hinge_Resume.pdf  <span class="d">(if nothing downloaded: </span>${lnk(CFG.resume,"open it here")}<span class="d">)</span>`);
+    const a=document.querySelector("[data-resume]"); if(a) a.click(); }},
   github:{d:"open my github", f(){ print(`→ ${lnk(CFG.github)}`); }},
   linkedin:{d:"open my linkedin", f(){ print(CFG.linkedin?`→ ${lnk(CFG.linkedin)}`:`<span class="d">linkedin link not added yet</span>`); }},
   ping:{d:"ping om", f(a){ const h=a[0]||"om"; let n=0; const t=setInterval(()=>{ n++; print(`64 bytes from ${esc(h)}: icmp_seq=${n} ttl=64 time=${(Math.random()*8+2).toFixed(2)} ms`); if(n===4){clearInterval(t); print(`<span class="d">--- ${esc(h)} ping statistics: 4 sent, 4 received, 0% loss ---</span>`);} },350); }},
@@ -617,6 +633,7 @@ const CMDS = {
   exit:{d:"", h:1, f(){ print("there is no exit. only git push."); }}
 };
 CMDS.kubectl = {h:1, f(a){ const i=a.indexOf("-n"); CMDS.skills.f(i>-1?[a[i+1]]:[]); }};
+CMDS.cv = CMDS.resume; CMDS.wget = {h:1, f(){ CMDS.resume.f(); }}; CMDS.curl = CMDS.wget;
 CMDS.git = {h:1, f(){ CMDS.experience.f(); }};
 ["batman","gotham","nightshift"].forEach(k=>CMDS[k]=CMDS.signal);
 
@@ -637,7 +654,7 @@ tin.addEventListener("keydown", e=>{
   else if(e.key==="l"&&e.ctrlKey){ e.preventDefault(); out.innerHTML=""; }
 });
 tbody.addEventListener("click", e=>{ if(!e.target.closest("a") && !getSelection().toString()) tin.focus({preventScroll:true}); });
-const quick = ["help","neofetch","skills","experience","trace","projects","f1","ride","contact","sudo hire om"];
+const quick = ["help","resume","neofetch","skills","experience","trace","projects","f1","ride","contact","sudo hire om"];
 $("#chips").innerHTML = quick.map(q=>`<button class="chip">${q}</button>`).join("");
 $("#chips").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(b){ run(b.textContent); } });
 
