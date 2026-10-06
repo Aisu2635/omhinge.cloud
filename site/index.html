@@ -178,7 +178,7 @@ tbody tr{animation:rowin .35s both}
 .copy:hover{border-color:var(--green);color:var(--green)}
 footer{color:var(--dim);font-size:12px}
 
-.egg{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:default}
+.egg{background:none;border:0;padding:6px 8px;margin:-6px -8px;color:inherit;font:inherit;cursor:default;touch-action:manipulation}
 .egg:hover,.egg:focus-visible{color:var(--amber);cursor:pointer}
 .hint{font-size:11px;opacity:.6}
 .night{position:fixed;inset:0;z-index:20;background:#03050a;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
@@ -705,7 +705,7 @@ let nightRAF=0;
 function night(){
   const n=$("#night"); n.classList.remove("on"); n.hidden=false;
   const cv=$("#nightcv"), ctx=cv.getContext("2d");
-  const W=240, H=Math.max(140,Math.min(420,Math.round(W*innerHeight/innerWidth)));
+  const W=240, H=Math.max(140,Math.min(420,Math.round(W*(innerHeight||800)/(innerWidth||1280))||180));
   cv.width=W; cv.height=H; const img=ctx.createImageData(W,H), d=img.data;
   const B=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
   const rnd=(i)=>{const x=Math.sin(i*127.1)*43758.5453;return x-Math.floor(x)};
@@ -771,6 +771,7 @@ function night(){
   nightRAF=requestAnimationFrame(frame);
   requestAnimationFrame(()=>requestAnimationFrame(()=>n.classList.add("on"))); setTimeout(()=>$("#dawn").focus({preventScroll:true}),1500);
 }
+$("#egg").addEventListener("click", e=>{ e.preventDefault(); night(); });
 $("#dawn").addEventListener("click",()=>{ const n=$("#night"); n.classList.remove("on"); n.hidden=true; cancelAnimationFrame(nightRAF); });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("#night").hidden=true; cancelAnimationFrame(nightRAF); } });
 
