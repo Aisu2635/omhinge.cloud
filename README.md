@@ -8,7 +8,8 @@ Personal portfolio of **Om Hinge**, DevOps engineer. A single static page with a
 
 | Layer | Choice |
 | --- | --- |
-| Site | Plain HTML, CSS and JS in `site/`. No build step, no framework. |
+| Site | Plain HTML, CSS and JS in `site/`. No framework. |
+| Blog | Markdown in `posts/`, turned into pages by `build.mjs` (zero dependencies) |
 | Hosting | Cloudflare Pages (global edge, free TLS) |
 | DNS | Cloudflare |
 | CI/CD | Cloudflare Pages Git integration (auto-deploy on push, preview per PR) |
@@ -24,8 +25,12 @@ every 6h      ──► GitHub Actions uptime check ──► fails loudly if th
 ## Repo layout
 
 ```
+posts/           blog posts (Markdown)
+build.mjs        blog builder
+blog.css         blog styles
 site/
   index.html     the portfolio
+  assets/blog/   post covers and infographics
   404.html       custom not-found page (Pages serves it automatically)
   _headers       security + cache headers
   robots.txt
@@ -43,7 +48,7 @@ Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** → **
 | Project name | `omhinge` |
 | Production branch | `main` |
 | Framework preset | None |
-| Build command | *(leave empty)* |
+| Build command | `node build.mjs` |
 | Build output directory | `site` |
 
 Save and deploy. The site is live at `omhinge.pages.dev`.
@@ -59,6 +64,34 @@ A root domain on Pages needs its DNS on Cloudflare. The domain stays registered 
 **Workers & Pages** → `omhinge` → **Custom domains** → add `omhinge.cloud`, then `www.omhinge.cloud`. Cloudflare creates the DNS records and the certificate.
 
 Optional: **Rules** → **Redirect Rules** → template *Redirect from WWW to root*.
+
+## Blog
+
+Posts are Markdown files in `posts/`. On every push Cloudflare runs `node build.mjs`, which generates `site/blog/` (post pages, the `ls -lt` index, `posts.json` for the homepage, an RSS feed) and refreshes `site/sitemap.xml`. `site/blog/` is generated, so it's git-ignored.
+
+**Cloudflare Pages settings:** build command `node build.mjs`, output directory `site`.
+
+### Writing a post
+
+1. Create `posts/YYYY-MM-DD-short-slug.md`:
+   ```markdown
+   ---
+   title: The title people will see
+   date: 2026-10-06
+   summary: One sentence for the blog index, link previews and RSS.
+   tags: [kubernetes, azure]
+   cover: /assets/blog/short-slug/cover.png
+   linkedin: https://www.linkedin.com/posts/...   # optional
+   ---
+
+   Your post in Markdown. `## Headings` build the contents box.
+   ![Caption shown under the image](/assets/blog/short-slug/diagram.png)
+   ```
+2. Put images in `site/assets/blog/short-slug/`. Covers are 1200×630, infographics 1600×2000.
+3. Preview locally (optional): `node build.mjs` then open `site/blog/index.html`, or `npx wrangler pages dev site`.
+4. `git add -A && git commit -m "post: short-slug" && git push`
+
+Add `draft: true` to the front matter to keep a post out of the build. Supported Markdown: headings, paragraphs, bold/italic, links, images, inline code, fenced code (```` ```yaml optional caption ````), lists, quotes, tables, `---`.
 
 ## Local preview
 

@@ -1,0 +1,86 @@
+/* omhinge.cloud blog — same terminal palette as the homepage. Reading column ~68ch. */
+:root{
+  --bg:#060907; --panel:#0a110c; --line:#1c2a20; --dim:#6b8371; --fg:#cfdccf; --white:#f1f5f1;
+  --green:#5cf28a; --green-d:#2e8a4c; --amber:#ffb347; --red:#ff4d4d;
+  --display:"VT323","IBM Plex Mono",ui-monospace,monospace;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--fg);font:16px/1.75 var(--sans);-webkit-text-size-adjust:100%}
+::selection{background:var(--green);color:var(--bg)}
+a{color:var(--green);text-decoration:none;border-bottom:1px dashed var(--green-d)}
+a:hover,a:focus-visible{color:var(--bg);background:var(--green);outline:none}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:1;background:repeating-linear-gradient(to bottom,transparent 0 2px,rgba(0,0,0,.16) 2px 3px)}
+.wrap{max-width:760px;margin:0 auto;padding-inline:20px;position:relative;z-index:2}
+.d{color:var(--dim)} .p{color:var(--green)} .small{font-size:13px}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:2px;flex-wrap:wrap;padding:10px 20px;background:rgba(6,9,7,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);font:600 13px/1.4 var(--mono)}
+.top a{border:0}
+.top nav{margin-left:auto;display:flex;gap:4px}
+.top nav a{color:var(--dim);font-weight:400;padding:4px 8px}
+.top nav a:hover{color:var(--bg)}
+
+.cmd{font:13px/1.5 var(--mono);color:var(--fg);margin:44px 0 14px}
+h1{font:700 clamp(30px,6vw,44px)/1.15 var(--sans);color:var(--white);margin:0 0 14px;letter-spacing:-.01em;text-wrap:balance}
+h1 em{font-style:normal;color:var(--amber)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;font:13px/1.5 var(--mono);color:var(--dim);margin-bottom:24px}
+.tag{color:var(--green)}
+.cover{display:block;width:100%;height:auto;border:1px solid var(--line);margin:0 0 28px}
+
+.toc{border:1px solid var(--line);background:var(--panel);padding:10px 16px;margin:0 0 28px;font:14px/1.6 var(--mono)}
+.toc summary{cursor:pointer;color:var(--dim)}
+.toc ol{margin:8px 0 4px;padding-left:22px}
+.toc a{border:0}
+
+.prose{max-width:68ch}
+.prose h2{font:600 24px/1.3 var(--sans);color:var(--white);margin:44px 0 12px;scroll-margin-top:70px}
+.prose h2::before{content:"## ";color:var(--green-d);font-family:var(--mono);font-weight:400}
+.prose h3{font:600 18px/1.4 var(--sans);color:var(--white);margin:30px 0 8px}
+.prose p{margin:0 0 18px}
+.prose strong{color:var(--white)}
+.prose em{color:var(--amber);font-style:normal}
+.prose ul,.prose ol{margin:0 0 18px;padding-left:22px}
+.prose li{margin:4px 0}
+.prose li::marker{color:var(--green)}
+.prose code{font:14px/1.5 var(--mono);color:var(--green);background:var(--panel);border:1px solid var(--line);padding:1px 5px}
+.prose blockquote{margin:0 0 18px;padding:2px 0 2px 16px;border-left:2px solid var(--amber);color:var(--fg)}
+.prose blockquote p{margin:8px 0}
+.prose hr{border:0;border-top:1px dashed var(--line);margin:36px 0}
+figure{margin:0 0 22px}
+figure.code{border:1px solid var(--line);background:#030504}
+figure.code figcaption{font:12px/1.4 var(--mono);color:var(--dim);padding:6px 12px;border-bottom:1px solid var(--line)}
+figure.code pre{margin:0;padding:14px;overflow-x:auto}
+figure.code code{font:13.5px/1.6 var(--mono);color:var(--fg);background:none;border:0;padding:0}
+figure.fig img{display:block;width:100%;height:auto;border:1px solid var(--line)}
+figure.fig figcaption{font:13px/1.5 var(--mono);color:var(--dim);margin-top:8px}
+.tbl{overflow-x:auto;margin:0 0 18px}
+.tbl table{border-collapse:collapse;width:100%;font:14px/1.5 var(--mono)}
+.tbl th{text-align:left;color:var(--dim);font-weight:500;border-bottom:1px solid var(--line);padding:6px 10px}
+.tbl td{padding:6px 10px;border-bottom:1px solid #111a14;vertical-align:top}
+
+.orig{font:13px/1.6 var(--mono);color:var(--dim);border-top:1px dashed var(--line);padding-top:16px;margin-top:36px}
+.pager{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font:13px/1.5 var(--mono);margin:24px 0}
+.back{font:13px var(--mono)}
+
+.lede{color:var(--fg);max-width:60ch;margin:0 0 28px}
+.posts{list-style:none;margin:0 0 20px;padding:0;display:flex;flex-direction:column;gap:12px}
+.posts a{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+.posts a:hover,.posts a:focus-visible{border-color:var(--green);background:var(--panel);color:var(--fg)}
+.posts .perm{font:12px/1.4 var(--mono);color:var(--dim);white-space:pre-wrap}
+.posts .t{font:600 19px/1.35 var(--sans);color:var(--white)}
+.posts .s{font-size:15px}
+.posts .tags{font:12px var(--mono);color:var(--green)}
+
+.foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font:12px/1.5 var(--mono);color:var(--dim);padding-block:48px 32px}
+@media (max-width:560px){
+  body{font-size:16px}
+  .wrap{padding-inline:16px}
+  .top{padding:10px 16px}
+  .top nav a{padding:4px 6px}
+  .cmd{margin-top:28px}
+  .prose h2{font-size:21px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}

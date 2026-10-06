@@ -194,6 +194,13 @@ footer{color:var(--dim);font-size:12px}
 .cta.ghost{background:transparent;color:var(--green);font-weight:500;border-color:var(--green-d)}
 .cta.ghost:hover,.cta.ghost:focus-visible{background:var(--green);color:var(--bg)}
 @media (max-width:560px){ .cta{padding:10px 14px} }
+.lede{margin:0 0 14px;max-width:65ch}
+.posts-home{display:flex;flex-direction:column;gap:10px}
+.bp{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);background:var(--panel);padding:14px 16px;color:var(--fg);border-bottom:1px solid var(--line)}
+.bp:hover,.bp:focus-visible{border-color:var(--green);background:var(--panel);color:var(--fg)}
+.bp .perm{font-size:12px;color:var(--dim)}
+.bp .bt{color:#fff;font-weight:500}
+.blogall{margin:12px 0 0;font-size:13px}
 /* tmux bar */
 .tmux{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--green);color:var(--bg);font-size:12px;display:flex;align-items:center;gap:2px;padding:0 10px;padding-bottom:env(safe-area-inset-bottom,0px);white-space:nowrap}
 .tmux .sess{font-weight:600;padding:3px 10px 3px 0}
@@ -431,6 +438,17 @@ footer{color:var(--dim);font-size:12px}
     <div class="grid" id="pgrid"></div>
   </section>
 
+  <section id="writing">
+    <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">ls -lt ~/blog | head -3</span></div>
+    <h2>Writing</h2>
+    <p class="lede">Long-form notes on things I've built and broken: Kubernetes, Azure networking, ingress.</p>
+    <div class="posts-home" id="bposts">
+      <a class="bp" href="/blog/nginx-to-traefik/"><span class="perm">2026-04-28 · kubernetes · traefik</span><span class="bt">Moving 100+ services from Nginx Ingress to Traefik with zero downtime</span></a>
+      <a class="bp" href="/blog/docker-bridge-vs-vnet-peering/"><span class="perm">2025-09-11 · docker · azure</span><span class="bt">Docker's bridge network quietly broke my VNet peering</span></a>
+    </div>
+    <p class="blogall"><a href="/blog/">cd ~/blog →</a></p>
+  </section>
+
   <section id="garage">
     <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">cd ~/garage &amp;&amp; ls</span></div>
     <h2>Off the clock: <em>F1</em> and two wheels</h2>
@@ -487,8 +505,9 @@ footer{color:var(--dim);font-size:12px}
     <a href="#experience" data-s="experience">3:exp</a>
     <a href="#debug" data-s="debug">4:trace</a>
     <a href="#projects" data-s="projects">5:projects</a>
-    <a href="#garage" data-s="garage">6:garage</a>
-    <a href="#contact" data-s="contact">7:contact</a>
+    <a href="#writing" data-s="writing">6:blog</a>
+    <a href="#garage" data-s="garage">7:garage</a>
+    <a href="#contact" data-s="contact">8:contact</a>
   </nav>
   <span class="clk" id="clk"></span>
 </div>
@@ -559,6 +578,11 @@ $("#pgrid").innerHTML = PROJECTS.map(p=>`<a class="proj" href="${CFG.github}/${p
   <span class="nm">${esc(p.n)}/</span><span class="ds">${esc(p.d)}</span><span class="lang">● ${esc(p.l)}</span></a>`).join("")
   + `<a class="proj" href="${CFG.github}?tab=repositories" target="_blank" rel="noopener"><span class="perm">lrwxrwxrwx  om  github</span><span class="nm">all-repos/ -&gt;</span><span class="ds">Everything else on GitHub.</span><span class="lang">● github.com/Aisu2635</span></a>`;
 
+/* ---------- latest blog posts ---------- */
+fetch("/blog/posts.json").then(r=>r.ok?r.json():Promise.reject()).then(ps=>{
+  $("#bposts").innerHTML=ps.slice(0,3).map(p=>`<a class="bp" href="${p.url}"><span class="perm">${p.date} · ${(p.tags||[]).slice(0,2).join(" · ")} · ${p.mins} min</span><span class="bt">${esc(p.title)}</span></a>`).join("");
+}).catch(()=>{});
+
 /* ---------- clock + tmux active ---------- */
 function tick(){
   const t = new Date().toLocaleTimeString("en-GB",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",second:"2-digit"});
@@ -569,7 +593,7 @@ const navLinks = [...document.querySelectorAll("#tnav a")];
 const io = new IntersectionObserver(es=>{
   es.forEach(e=>{ if(e.isIntersecting){ navLinks.forEach(a=>a.classList.toggle("cur", a.dataset.s===e.target.id)); } });
 },{rootMargin:"-45% 0px -50% 0px"});
-["top","about","skills","experience","debug","projects","garage","contact"].forEach(id=>io.observe(document.getElementById(id)));
+["top","about","skills","experience","debug","projects","writing","garage","contact"].forEach(id=>io.observe(document.getElementById(id)));
 
 /* ---------- terminal ---------- */
 const out = $("#tout"), tin = $("#tin"), tbody = $("#tbody");
@@ -613,6 +637,12 @@ const CMDS = {
   experience:{d:"git log career", f(){ print(`<span class="a">a1f3c09</span> <span class="p">(HEAD -> main)</span> Assoc. Software Dev (DevOps) @ Bajaj Finserv Health  <span class="d">Nov 2025–now</span>\n<span class="a">5b8e113</span> DevOps Intern @ Bajaj Finserv Health  <span class="d">Apr–Oct 2025</span>\n<span class="a">7e2d0b4</span> DevOps Engineer (Intern) @ Xora  <span class="d">Feb–Mar 2025</span>\n<span class="a">3c91fa0</span> Software Engineer DevOps @ Artha IT  <span class="d">Feb–Mar 2025</span>\n<span class="a">9d04c7a</span> Cloud Engineer Intern @ Claw Enterprises  <span class="d">May–Jul 2024</span>\n<span class="a">2f6b8d1</span> Technical Head @ CSI-TCET  <span class="d">2022–23</span>\n<span class="a">0c4b1e2</span> B.E. Computer Engg, TCET Mumbai (9.42 CGPA)`); go("experience"); }},
   projects:{d:"ls ~/projects", f(){ print(`<span class="w">featured</span>\n<span class="p">${"DB Dashboard".padEnd(20)}</span><span class="d">DB access & governance platform</span>\n<span class="p">${"FlowOps".padEnd(20)}</span><span class="d">visual GitHub Actions builder</span>\n<span class="w">github</span>`); print(PROJECTS.map(p=>`<span class="p">${p.n.padEnd(20)}</span><span class="d">${p.l}</span>`).join("\n")); go("projects"); }},
   f1:{d:"lights out reaction test", f(){ print("box box. heading to the grid ..."); go("garage"); setTimeout(()=>$("#gantry").focus({preventScroll:true}),500); }},
+  blog:{d:"read my blog", async f(){
+    print(`<span class="d">$ ls -lt ~/blog</span>`);
+    try{ const r=await fetch("/blog/posts.json"); const ps=await r.json();
+      print(ps.map(p=>`<span class="d">${p.date}</span>  ${lnk(""+p.url,p.title)}`).join("\n")+`\n<span class="d">all posts:</span> ${lnk("/blog/","omhinge.cloud/blog")}`);
+    }catch(e){ print(`${lnk("https://omhinge.cloud/blog/","omhinge.cloud/blog")}`); }
+    go("writing"); }},
   trace:{d:"solve a network case", f(){ print("pulling the case file ..."); go("debug"); }},
   pacman:{d:"", h:1, f(){ print(`:: Synchronizing package databases...\n core is up to date\n extra is up to date\n:: Starting full system upgrade...\n resolving dependencies...\n Packages (3) kubectl-1.31  opentofu-1.8  coffee-∞\n<span class="p">:: Done. i use arch btw.</span>`); }},
   ride:{d:"twist the throttle", f(){ print("helmet on. keys in."); go("garage"); setTimeout(()=>$("#throttle").focus({preventScroll:true}),500); }},
@@ -623,7 +653,7 @@ const CMDS = {
   github:{d:"open my github", f(){ print(`→ ${lnk(CFG.github)}`); }},
   linkedin:{d:"open my linkedin", f(){ print(CFG.linkedin?`→ ${lnk(CFG.linkedin)}`:`<span class="d">linkedin link not added yet</span>`); }},
   ping:{d:"ping om", f(a){ const h=a[0]||"om"; let n=0; const t=setInterval(()=>{ n++; print(`64 bytes from ${esc(h)}: icmp_seq=${n} ttl=64 time=${(Math.random()*8+2).toFixed(2)} ms`); if(n===4){clearInterval(t); print(`<span class="d">--- ${esc(h)} ping statistics: 4 sent, 4 received, 0% loss ---</span>`);} },350); }},
-  ls:{d:"list files", f(){ print(`<span class="p">about.md  contact.yaml  career.log  projects/  garage/</span>`); }},
+  ls:{d:"list files", f(){ print(`<span class="p">about.md  contact.yaml  career.log  blog/  projects/  garage/</span>`); }},
   cat:{d:"cat <file>", h:1, f(a){ const m={"about.md":"about","contact.yaml":"contact","career.log":"experience"}; if(m[a[0]]) CMDS[m[a[0]]==="experience"?"experience":m[a[0]]].f([]); else print(`cat: ${esc(a[0]||"")}: No such file or directory`,"r"); }},
   sudo:{d:"try it", f(a){ if(a.join(" ").includes("hire")) print(`<span class="p">[sudo] permission granted.</span> Send the offer to ${CFG.email} ✓`); else print(`om is not in the sudoers file. Try <span class="p">sudo hire om</span>.`); }},
   date:{d:"time in IST", h:1, f(){ print(new Date().toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})+" IST"); }},
