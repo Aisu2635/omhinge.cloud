@@ -10,3 +10,6 @@
 
 /index.html
   Cache-Control: public, max-age=300, must-revalidate
+
+/blog/feed.xml
+  Content-Type: application/xml; charset=utf-8

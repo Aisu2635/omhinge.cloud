@@ -116,10 +116,10 @@ ${image ? `<meta property="og:image" content="${SITE}${image}">\n<meta name="twi
 </head>
 <body>
 <div class="scan" aria-hidden="true"></div>
-<header class="top"><a href="/" class="home">om@omniscient</a><span class="d">:</span><a href="/blog/">~/blog</a><span class="d">$</span><nav><a href="/">home</a><a href="/blog/">blog</a><a href="/blog/feed.xml">rss</a><a href="/Om_Hinge_Resume.pdf" download>resume</a></nav></header>
+<header class="top"><a href="/" class="home">om@omniscient</a><span class="d">:</span><a href="/blog/">~/blog</a><span class="d">$</span><nav><a href="/">home</a><a href="/blog/">blog</a><a href="/blog/rss/">rss</a><a href="/Om_Hinge_Resume.pdf" download>resume</a></nav></header>
 <main class="wrap">`;
 const FOOT = `</main>
-<footer class="foot wrap"><span>© ${new Date().getFullYear()} Om Hinge</span><span><a href="https://github.com/Aisu2635" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/om-hinge2635" target="_blank" rel="noopener">linkedin</a> · <a href="/blog/feed.xml">rss</a></span></footer>
+<footer class="foot wrap"><span>© ${new Date().getFullYear()} Om Hinge</span><span><a href="https://github.com/Aisu2635" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/om-hinge2635" target="_blank" rel="noopener">linkedin</a> · <a href="/blog/rss/">rss</a></span></footer>
 </body>
 </html>
 `;
@@ -173,7 +173,7 @@ ${posts.map(p => `    <li><a href="${p.url}">
       <span class="tags">${p.tags.map(t => `#${esc(t)}`).join(" ")}</span>
     </a></li>`).join("\n")}
   </ol>
-  <p class="d small">total ${posts.length} · subscribe via <a href="/blog/feed.xml">rss</a></p>
+  <p class="d small">total ${posts.length} · subscribe via <a href="/blog/rss/">rss</a></p>
 </section>` + FOOT);
 
 // json for the homepage
@@ -199,6 +199,28 @@ ${posts.map(p => `  <item>
 </channel>
 </rss>
 `);
+
+// rss landing page (opening feed.xml directly shows raw XML or downloads it)
+const FEED = `${SITE}/blog/feed.xml`, enc = encodeURIComponent(FEED);
+fs.mkdirSync(path.join(OUT, "rss"), { recursive: true });
+fs.writeFileSync(path.join(OUT, "rss", "index.html"), HEAD("Subscribe · Om Hinge", "Follow new posts from omhinge.cloud in any RSS reader.", SITE + "/blog/rss/") + `
+<section class="list">
+  <div class="cmd"><span class="p">om@omniscient:~/blog$</span> cat subscribe.md</div>
+  <h1>Follow the <em>blog</em></h1>
+  <p class="lede">New posts land here first. Paste this feed URL into any RSS reader, or pick one below.</p>
+  <div class="feedbox"><code id="feed">${FEED}</code><button type="button" id="cp">copy</button></div>
+  <ul class="readers">
+    <li><a href="https://feedly.com/i/subscription/feed/${enc}" target="_blank" rel="noopener">Add to Feedly</a></li>
+    <li><a href="https://www.inoreader.com/?add_feed=${enc}" target="_blank" rel="noopener">Add to Inoreader</a></li>
+    <li><a href="/blog/feed.xml" target="_blank" rel="noopener">Raw feed (XML)</a></li>
+  </ul>
+  <p class="d small">Latest: ${posts[0] ? `<a href="${posts[0].url}">${esc(posts[0].title)}</a>` : "nothing yet"}</p>
+</section>
+<script>
+document.getElementById("cp").addEventListener("click",e=>{const b=e.currentTarget,t=document.getElementById("feed").textContent;
+(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{b.textContent="copied"}).catch(()=>{const r=document.createRange();r.selectNodeContents(document.getElementById("feed"));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="selected"});
+setTimeout(()=>b.textContent="copy",1500);});
+</script>` + FOOT);
 
 // sitemap
 fs.writeFileSync(path.join(ROOT, "site", "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>

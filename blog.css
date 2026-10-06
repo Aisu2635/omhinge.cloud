@@ -74,6 +74,11 @@ figure.fig figcaption{font:13px/1.5 var(--mono);color:var(--dim);margin-top:8px}
 .posts .s{font-size:15px}
 .posts .tags{font:12px var(--mono);color:var(--green)}
 
+.feedbox{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin:0 0 20px}
+.feedbox code{flex:1;min-width:0;font:14px/1.5 var(--mono);color:var(--green);background:var(--panel);border:1px solid var(--line);padding:10px 12px;word-break:break-all}
+.feedbox button{font:600 13px var(--mono);background:var(--green);color:var(--bg);border:0;padding:10px 16px;cursor:pointer}
+.readers{list-style:none;padding:0;margin:0 0 20px;display:flex;flex-wrap:wrap;gap:10px}
+.readers a{display:inline-block;border:1px solid var(--green-d);padding:8px 14px;font:13px var(--mono)}
 .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font:12px/1.5 var(--mono);color:var(--dim);padding-block:48px 32px}
 @media (max-width:560px){
   body{font-size:16px}
