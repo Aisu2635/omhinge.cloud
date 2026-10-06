@@ -93,6 +93,7 @@ h2 em{font-style:normal;color:var(--green)}
 .fp h3{margin:0;font:400 32px/1 var(--display);color:#fff}
 .fp p{margin:0;font-size:13px}
 .fp .perm{color:var(--amber);font-size:12px}
+.fp .fplink{font-size:12px;align-self:flex-start;margin-top:2px}
 .fp .flow{font-size:12px;color:var(--dim);border-top:1px dashed var(--line);padding-top:8px;overflow-x:auto;white-space:nowrap}
 .lede{margin:0 0 14px;max-width:65ch;color:var(--fg)}
 .case{border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
@@ -211,6 +212,7 @@ footer{color:var(--dim);font-size:12px}
 .tmux .clk{padding:3px 0 3px 10px;font-variant-numeric:tabular-nums}
 
 .only-touch{display:none}
+kbd{font:600 11px/1 var(--mono);color:var(--fg);border:1px solid var(--dim);border-bottom-width:2px;padding:1px 5px;border-radius:3px}
 @media (hover:none){ .only-touch{display:inline} .only-mouse{display:none} }
 @media (max-width:560px){
   #net{opacity:.6}
@@ -261,7 +263,8 @@ footer{color:var(--dim);font-size:12px}
   .fp h3{font-size:28px}
 }
 @media (prefers-reduced-motion:reduce){
-  *{animation:none!important;transition:none!important}
+  *:not(.cur){animation:none!important;transition:none!important}
+  .hero h1 .cur{animation:blink 1.2s steps(1) infinite!important}
 }
 </style>
 </head>
@@ -422,6 +425,13 @@ footer{color:var(--dim);font-size:12px}
     <h2>Projects</h2>
     <div class="feat">
       <article class="fp">
+        <div class="perm">in progress · android app · kotlin</div>
+        <h3>HorizOn</h3>
+        <p>An open-source Android standby mode: put a charging phone on its side and it becomes a calm desk clock and music display, with now-playing controls, album-art tinting and burn-in protection. No internet permission.</p>
+        <div class="flow" aria-hidden="true">charging → <span class="p">screen saver</span> → clock + now playing</div>
+        <a class="fplink" href="https://github.com/Aisu2635/HorizOn" target="_blank" rel="noopener">github.com/Aisu2635/HorizOn →</a>
+      </article>
+      <article class="fp">
         <div class="perm">May 2026 · internal platform</div>
         <h3>DB Dashboard</h3>
         <p>Centralised database access and governance portal: automated DB user creation, role-based access requests, scheduled expiry tracking, email alerts and PII data-classification schemas.</p>
@@ -455,17 +465,17 @@ footer{color:var(--dim);font-size:12px}
     <div class="garage">
       <div class="rig" id="f1">
         <h3>./lights-out</h3>
-        <div class="sub">Five reds, then go. <span class="only-mouse">Click the gantry (or press Enter on it)</span><span class="only-touch">Tap the gantry</span> when the lights go out.</div>
+        <div class="sub">Five reds, then go. <span class="only-mouse">Press <kbd>Enter</kbd> (or click the gantry)</span><span class="only-touch">Tap the gantry</span> when the lights go out.</div>
         <div class="lights" id="gantry" tabindex="0" role="button" aria-label="F1 start lights reaction test"></div>
         <div class="readout">
-          <div><div class="big" id="rt">0.000</div><div class="small" id="rtmsg">Click to start</div></div>
+          <div><div class="big" id="rt">0.000</div><div class="small" id="rtmsg"><span class="only-mouse">Press Enter to start</span><span class="only-touch">Tap to start</span></div></div>
           <div class="small" style="text-align:right">personal best<br><span class="a" id="best">--</span><br>F1 drivers: ~0.200 s</div>
         </div>
       </div>
 
       <div class="rig shift" id="ride">
         <h3>./throttle</h3>
-        <div class="sub"><span class="only-mouse">Hold the button (or Space while it's focused)</span><span class="only-touch">Press and hold the button</span> to twist the grip. Release to coast.</div>
+        <div class="sub"><span class="only-mouse">Hold <kbd>Space</kbd> (or the button)</span><span class="only-touch">Press and hold the button</span> to twist the grip. Release to coast.</div>
         <div class="dash">
           <div><b id="gear">N</b><small>gear</small></div>
           <div><b id="spd">0</b><small>km/h</small></div>
@@ -820,6 +830,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("#night").hidde
 })();
 
 /* ---------- F1 lights out ---------- */
+const AGAIN = matchMedia("(hover:none)").matches ? "tap to go again" : "press Enter to go again";
 (function(){
   const g = $("#gantry"); const bulbs=[];
   for(let i=0;i<5;i++){ const p=document.createElement("div"); p.className="pod"; for(let j=0;j<2;j++){ const b=document.createElement("div"); b.className="bulb"; p.appendChild(b); if(j===1) bulbs.push(b); else bulbs.push(b); } g.appendChild(p); }
@@ -837,14 +848,15 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("#night").hidde
   }
   function hit(){
     if(state==="idle"||state==="done") return start();
-    if(state==="arming"){ reset(); state="done"; rt.textContent="JUMP"; rt.classList.add("bad"); msg.textContent="jump start · drive-through penalty. click to retry"; return; }
+    if(state==="arming"){ reset(); state="done"; rt.textContent="JUMP"; rt.classList.add("bad"); msg.textContent="jump start · drive-through penalty. "+AGAIN.replace("to go again","to retry")+""; return; }
     if(state==="go"){ const t=(performance.now()-goAt)/1000; state="done"; rt.textContent=t.toFixed(3);
-      if(!pb||t<pb){ pb=t; store.set("om_f1_best",String(t)); best.textContent=t.toFixed(3)+" s"; msg.textContent="purple sector! new personal best. click to go again"; }
-      else msg.textContent=(t<0.25?"pole position pace.":t<0.35?"solid launch.":"bogged down off the line.")+" click to go again";
+      if(!pb||t<pb){ pb=t; store.set("om_f1_best",String(t)); best.textContent=t.toFixed(3)+" s"; msg.textContent="purple sector! new personal best. "+AGAIN; }
+      else msg.textContent=(t<0.25?"pole position pace.":t<0.35?"solid launch.":"bogged down off the line.")+" "+AGAIN;
     }
   }
   g.addEventListener("pointerdown", e=>{ e.preventDefault(); hit(); });
-  g.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); hit(); } });
+  g.addEventListener("keydown", e=>{ if((e.key==="Enter"||e.key===" ")&&!e.repeat){ e.preventDefault(); e.stopPropagation(); hit(); } });
+  window.__f1hit = hit;
 })();
 
 /* ---------- Bike throttle ---------- */
@@ -880,8 +892,18 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("#night").hidde
   const off=()=>{ held=false; btn.textContent="hold to ride"; };
   btn.addEventListener("pointerdown", on);
   ["pointerup","pointerleave","pointercancel","blur"].forEach(ev=>btn.addEventListener(ev, off));
-  btn.addEventListener("keydown", e=>{ if((e.key===" "||e.key==="Enter")&&!e.repeat) on(e); });
-  btn.addEventListener("keyup", e=>{ if(e.key===" "||e.key==="Enter") off(); });
+  btn.addEventListener("keydown", e=>{ if((e.key===" "||e.key==="Enter")){ e.preventDefault(); e.stopPropagation(); if(!e.repeat) on(e); } });
+  btn.addEventListener("keyup", e=>{ if(e.key===" "||e.key==="Enter"){ e.stopPropagation(); off(); } });
+  // global keys while the garage is on screen: Enter = F1 lights, hold Space = throttle
+  let garageVisible=false;
+  new IntersectionObserver(es=>{ garageVisible=es[0].isIntersecting; },{threshold:.25}).observe(document.getElementById("garage"));
+  const typing=()=>{ const a=document.activeElement; return a && (a.matches("input,textarea,select,[contenteditable]") || (a.matches("a,button") && !a.closest("#garage"))); };
+  addEventListener("keydown", e=>{
+    if(!garageVisible || typing() || !document.getElementById("night").hidden || e.ctrlKey||e.metaKey||e.altKey) return;
+    if(e.key==="Enter"){ e.preventDefault(); if(!e.repeat && window.__f1hit) window.__f1hit(); }
+    else if(e.key===" "){ e.preventDefault(); if(!e.repeat) on(e); }
+  });
+  addEventListener("keyup", e=>{ if(e.key===" " && held) off(); });
   btn.addEventListener("contextmenu", e=>e.preventDefault());
   draw(); requestAnimationFrame(loop);
 })();
