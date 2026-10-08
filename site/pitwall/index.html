@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pit Wall · omhinge.cloud health check</title>
+<meta name="description" content="A live health check of omhinge.cloud, run as an F1 pit stop.">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#060907">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23060907'/%3E%3Cpath d='M3 4l4 4-4 4' stroke='%235cf28a' stroke-width='2' fill='none'/%3E%3Crect x='8' y='11' width='5' height='2' fill='%235cf28a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=VT323&display=swap">
+<style>
+/* Pit wall: a pixel pit stop on top, timing tower + team radio below. Same terminal palette as the homepage. */
+:root{
+  --bg:#060907; --panel:#0a110c; --line:#1c2a20; --dim:#6b8371; --fg:#cfdccf;
+  --green:#5cf28a; --amber:#ffb347; --red:#ff4d4d; --purple:#c77dff; --yellow:#ffd23f;
+  --display:"VT323","IBM Plex Mono",ui-monospace,monospace;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--fg);font:14px/1.6 var(--mono)}
+a{color:var(--green);text-decoration:none;border-bottom:1px dashed #2e8a4c}
+a:hover,a:focus-visible{background:var(--green);color:var(--bg);outline:none}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:flex;flex-direction:column;gap:18px}
+.cmd{font-size:13px;color:var(--dim)} .p{color:var(--green)}
+h1{font:400 clamp(40px,8vw,64px)/1 var(--display);color:#fff;margin:0;letter-spacing:.02em}
+h1 em{font-style:normal;color:var(--red)}
+.lede{margin:0;max-width:62ch}
+
+.track{position:relative;border:1px solid var(--line);background:#0b0d0c}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges}
+.watch{position:absolute;right:12px;top:8px;font:400 clamp(30px,6vw,52px)/1 var(--display);color:#fff;text-shadow:0 0 12px rgba(0,0,0,.8);font-variant-numeric:tabular-nums}
+.watch small{font-size:.45em;color:var(--dim);display:block;text-align:right;letter-spacing:.08em}
+.call{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.75) 35%);padding-block:22px 10px !important;text-align:center;font:400 clamp(22px,4.6vw,40px)/1.05 var(--display);color:var(--amber);text-shadow:0 2px 0 #000,0 0 14px rgba(0,0,0,.9);padding:0 12px;letter-spacing:.03em}
+.call:empty{display:none}
+@media (max-width:560px){ .call{font-size:20px} .watch{font-size:30px} }
+.call.win{color:var(--green)} .call.bad{color:var(--red)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px}
+.panel{border:1px solid var(--line);background:var(--panel);min-width:0}
+.panel h2{margin:0;padding:8px 12px;border-bottom:1px solid var(--line);font:600 12px/1.4 var(--mono);color:var(--dim);letter-spacing:.08em;display:flex;justify-content:space-between}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:6px 12px;text-align:left;white-space:nowrap}
+th{color:var(--dim);font-weight:500;font-size:11px;letter-spacing:.06em}
+tbody tr{border-top:1px solid #111a14}
+td.pos{color:var(--dim);width:3ch}
+td.t{text-align:right}
+.purple{color:var(--purple)} .ok{color:var(--green)} .slow{color:var(--yellow)} .dnf{color:var(--red)}
+.radio{padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-height:190px;font-size:13px}
+.radio div{opacity:0;transform:translateY(4px);transition:opacity .25s,transform .25s}
+.radio div.in{opacity:1;transform:none}
+.radio .who{color:var(--amber)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:600 13px var(--mono);background:var(--green);color:var(--bg);border:0;padding:10px 16px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:wait}
+.small{font-size:12px;color:var(--dim)}
+kbd{font:600 11px/1 var(--mono);color:var(--fg);border:1px solid var(--dim);border-bottom-width:2px;padding:1px 5px;border-radius:3px}
+@media (max-width:700px){ .grid{grid-template-columns:1fr} td .small{display:none} td,th{padding:6px 8px} .radio{font-size:12px} }
+.panel table{display:table}
+.panel{overflow-x:auto}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="cmd"><span class="p">om@omniscient:~$</span> ./healthcheck --box-box</div>
+  <h1>Pit <em>wall</em></h1>
+  <p class="lede">A live health check of this website, run as a pit stop. Every time the car comes in, the crew checks each endpoint for real. All green, and it's back out on track.</p>
+
+  <div class="track">
+    <canvas id="cv" width="320" height="128" aria-label="Pixel animation of a red F1 car making a pit stop"></canvas>
+    <div class="watch"><span id="watch">0.00</span><small>STATIONARY</small></div>
+    <div class="call" id="call" aria-live="polite"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="go" type="button">box, box</button>
+    <span class="small">or press <kbd>Enter</kbd> · <a href="/">cd ~</a></span>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2><span>TIMING TOWER</span><span id="lap">LAP 0</span></h2>
+      <table>
+        <thead><tr><th>POS</th><th>ENDPOINT</th><th>STATUS</th><th style="text-align:right">TIME</th></tr></thead>
+        <tbody id="tower"><tr><td class="pos">-</td><td class="small" colspan="3">waiting for the car to come in</td></tr></tbody>
+      </table>
+    </section>
+    <section class="panel">
+      <h2><span>TEAM RADIO</span><span id="ver"></span></h2>
+      <div class="radio" id="radio"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+/* ---------- the health check ---------- */
+const CHECKS = [
+  { name: "HOME",   url: "/" },
+  { name: "BLOG",   url: "/blog/" },
+  { name: "RSS",    url: "/blog/feed.xml" },
+  { name: "SITEMAP",url: "/sitemap.xml" },
+  { name: "RESUME", url: "/Om_Hinge_Resume.pdf", method: "HEAD" },
+  { name: "BUILD",  url: "/version.txt" }
+];
+async function probe(c){
+  const t0 = performance.now();
+  try{
+    const r = await fetch(c.url + (c.url.includes("?") ? "&" : "?") + "pit=" + Date.now(), { method: c.method || "GET", cache: "no-store" });
+    const body = c.name === "BUILD" && r.ok ? (await r.text()).trim() : null;
+    return { ...c, status: r.status, ok: r.ok, ms: performance.now() - t0, body };
+  }catch(e){
+    return { ...c, status: "ERR", ok: false, ms: performance.now() - t0 };
+  }
+}
+
+/* ---------- radio + tower ---------- */
+const $ = s => document.querySelector(s);
+const radio = $("#radio");
+function say(who, text){
+  const d = document.createElement("div");
+  d.innerHTML = `<span class="who">[${who}]</span> ${text}`;
+  radio.appendChild(d); requestAnimationFrame(() => d.classList.add("in"));
+  while (radio.children.length > 7) radio.firstChild.remove();
+}
+function tower(results){
+  const sorted = [...results].sort((a, b) => (b.ok - a.ok) || (a.ms - b.ms));
+  const best = Math.min(...results.filter(r => r.ok).map(r => r.ms));
+  $("#tower").innerHTML = sorted.map((r, i) => {
+    const cls = !r.ok ? "dnf" : r.ms === best ? "purple" : r.ms > 800 ? "slow" : "ok";
+    return `<tr><td class="pos">${r.ok ? i + 1 : "-"}</td><td>${r.name} <span class="small">${r.url}</span></td>
+      <td class="${r.ok ? "ok" : "dnf"}">${r.ok ? r.status : "DNF " + r.status}</td>
+      <td class="t ${cls}">${r.ok ? (r.ms / 1000).toFixed(3) + "s" : "--"}</td></tr>`;
+  }).join("");
+}
+
+/* ---------- pixel pit stop ---------- */
+const cv = $("#cv"), ctx = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+const BOX_X = 118, CAR_Y = 70;          // car top-left when parked
+const C = { red: "#d0101b", red2: "#8e0a12", red3: "#ff3b3b", black: "#111214", tyre: "#1b1c1e", white: "#eef2ee",
+            asphalt: "#2a2e31", asphalt2: "#262a2c", line: "#d9d9d9", yellow: "#f2c230", wall: "#16191b",
+            garage: "#33373a", light: "#f6f1d6", crew: "#c8101a", crew2: "#7d0a10", visor: "#1a1a1a", skin: "#e7b98f" };
+const px = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
+
+function drawScene(){
+  // garage wall and openings
+  px(0, 0, W, 44, C.wall);
+  for (let i = 0; i < 4; i++){ const gx = 18 + i * 78; px(gx, 6, 64, 38, C.garage); for (let l = 0; l < 6; l++) px(gx + 4 + l * 10, 8, 6, 1, C.light); px(gx, 42, 64, 2, "#0d0f10"); }
+  px(BOX_X - 14, 4, 102, 3, C.red);                 // team stripe above the box
+  // pit lane
+  px(0, 44, W, H - 44, C.asphalt);
+  for (let y = 48; y < H; y += 6) for (let x = (y / 6 % 2) * 3; x < W; x += 9) px(x, y, 1, 1, C.asphalt2);
+  for (let x = 0; x < W; x += 14) px(x, 116, 8, 1, C.line);          // fast-lane line
+  // pit box markings
+  px(BOX_X - 10, 54, 94, 1, C.yellow); px(BOX_X - 10, 106, 94, 1, C.yellow);
+  px(BOX_X - 10, 54, 1, 53, C.yellow); px(BOX_X + 83, 54, 1, 53, C.yellow);
+  for (let i = 0; i < 6; i++) px(BOX_X + 2 + i * 13, 105, 6, 2, C.white); // stop marks
+}
+
+// top-down F1 car, nose pointing right. x,y = top-left of the body area (74 x 26)
+function drawCar(x, y, wheels, lift){
+  const sy = y - lift;
+  px(x + 4, y + 3 + 2, 68, 22, "rgba(0,0,0,.35)");                 // shadow
+  // rear wing
+  px(x, sy + 3, 6, 20, C.black); px(x + 1, sy + 4, 4, 18, C.red2);
+  // floor + body
+  px(x + 6, sy + 6, 52, 14, C.red2);
+  px(x + 10, sy + 4, 30, 18, C.red);                                  // sidepods
+  px(x + 38, sy + 8, 22, 10, C.red);                                  // front of chassis
+  px(x + 58, sy + 10, 10, 6, C.red);                                  // nose
+  px(x + 68, sy + 11, 3, 4, C.red3);                                  // nose tip
+  px(x + 14, sy + 6, 22, 2, C.red3); px(x + 14, sy + 18, 22, 2, C.red2); // highlights
+  px(x + 22, sy + 11, 18, 4, C.white);                                // white engine-cover stripe (no logos)
+  // cockpit, halo, helmet
+  px(x + 40, sy + 9, 9, 8, C.black);
+  px(x + 42, sy + 10, 5, 6, C.yellow);                                // helmet
+  px(x + 46, sy + 11, 2, 4, C.visor);
+  px(x + 39, sy + 8, 1, 10, "#555"); px(x + 39, sy + 8, 10, 1, "#555"); px(x + 39, sy + 17, 10, 1, "#555"); // halo
+  // front wing
+  px(x + 66, sy, 6, 26, C.black); px(x + 67, sy + 1, 4, 24, C.red);
+  // wheels: [dx, dy, w, h]
+  const pos = WHEELS;
+  pos.forEach((p, i) => {
+    const wv = wheels[i];
+    if (wv.old > 0) drawTyre(x + p[0] + p[4] * wv.oldOff, sy + p[1] + p[5] * wv.oldOff, p[2], p[3], "#666");
+    if (wv.neu > 0) drawTyre(x + p[0] + p[4] * wv.neuOff, sy + p[1] + p[5] * wv.neuOff, p[2], p[3], C.yellow);
+  });
+}
+const WHEELS = [ // dx, dy, w, h, outward x, outward y
+  [8, -5, 13, 7, 0, -1], [8, 24, 13, 7, 0, 1],      // rear left/right
+  [52, -4, 11, 6, 0, -1], [52, 24, 11, 6, 0, 1]      // front left/right
+];
+function drawTyre(x, y, w, h, band){
+  px(x, y, w, h, C.tyre);
+  px(x + 1, y, w - 2, 1, band); px(x + 1, y + h - 1, w - 2, 1, band);
+  px(x + 2, y + 2, w - 4, h - 4, "#2a2b2e");
+}
+
+// crew member top-down: helmet + overalls, with a tool
+function drawCrew(x, y, facing, tool){
+  px(x - 4, y - 4, 9, 9, C.crew2); px(x - 3, y - 3, 7, 7, C.crew);  // shoulders/overalls
+  px(x - 4 + (facing[0] ? 0 : 0), y - 4, 2, 2, C.crew2);
+  px(x - 2, y - 2, 5, 5, C.white);                                  // helmet
+  px(x - 1 + facing[0] * 2, y - 1 + facing[1] * 2, facing[0] ? 1 : 3, facing[0] ? 3 : 1, C.visor); // visor faces the car
+  if (tool === "gun") px(x + facing[0] * 5 - 1, y + facing[1] * 5 - 1, 3, 3, "#9aa0a6");
+}
+function crewPositions(cx, cy){
+  // gunners + tyre carriers at each wheel, jacks front/back, lollipop by the nose
+  return [
+    [cx + 15, cy - 14, [0, 1], "gun"], [cx + 3, cy - 19, [0, 1]],     // rear left
+    [cx + 15, cy + 39, [0, -1], "gun"], [cx + 3, cy + 44, [0, -1]],   // rear right
+    [cx + 57, cy - 13, [0, 1], "gun"], [cx + 68, cy - 18, [0, 1]],    // front left
+    [cx + 57, cy + 38, [0, -1], "gun"], [cx + 68, cy + 43, [0, -1]],  // front right
+  ];
+}
+
+/* ---------- animation timeline ---------- */
+let anim = null;
+const ease = t => 1 - Math.pow(1 - t, 3), easeIn = t => t * t * t;
+function frame(now){
+  if (!anim) return;
+  const a = anim; const t = now - a.t0;
+  ctx.clearRect(0, 0, W, H); drawScene();
+  let carX, lift = 0, stopped = false, lolli = "red";
+  const wheels = WHEELS.map(() => ({ old: 1, neu: 0, oldOff: 0, neuOff: 0 }));
+  const ENTER = 1300, JACK = 180;
+
+  if (t < ENTER){                                         // coming in
+    carX = -80 + (BOX_X + 80) * ease(t / ENTER);
+  } else {
+    carX = BOX_X; stopped = true;
+    const st = t - ENTER;                                  // stationary time
+    if (a.stopStart == null){ a.stopStart = now; a.onStop && a.onStop(); }
+    lift = st > JACK ? 1 : 0;
+    // tyre change, per wheel: old tyre out, new tyre in
+    wheels.forEach((w, i) => {
+      const d = a.wheelDur[i], k = Math.max(0, st - JACK) / d;
+      const stuck = a.failed && i === 0;
+      const kk = stuck ? Math.min(k, 0.72) : Math.min(k, 1);
+      if (kk < 0.45){ w.old = 1; w.oldOff = 12 * (kk / 0.45); w.neu = kk > 0.3 ? 1 : 0; w.neuOff = 14; }
+      else { w.old = 0; w.neu = 1; w.neuOff = 14 * (1 - Math.min(1, (kk - 0.45) / 0.55)); }
+      if (stuck && kk >= 0.72) w.neuOff = 4 + Math.round(Math.sin(now / 60)); // loose wheel
+    });
+    const tyresDone = !a.failed && st > JACK + Math.max(...a.wheelDur);
+    if (tyresDone && a.result && a.leaveAt == null){ a.leaveAt = t + 150; a.stopTime = (now - a.stopStart + 150) / 1000; a.onGo && a.onGo(); }
+    if (a.leaveAt != null && t > a.leaveAt){
+      lift = 0; lolli = "green";
+      const k = Math.min(1, (t - a.leaveAt) / 1000);
+      carX = BOX_X + (W + 20 - BOX_X) * easeIn(k);
+      stopped = k < 0.05;
+      if (k >= 1){ a.done = true; }
+    }
+    if (a.leaveAt == null && !a.frozen) $("#watch").textContent = ((now - a.stopStart) / 1000).toFixed(2);
+  }
+
+  // crew walk in when the car is close, walk away after it leaves
+  const crewOn = carX > BOX_X - 30 && (a.leaveAt == null || t - a.leaveAt < 400);
+  if (crewOn) crewPositions(BOX_X, CAR_Y).forEach(([x, y, f, tool]) => drawCrew(x, y, f, tool));
+  if (crewOn || stopped){
+    // jacks
+    drawCrew(BOX_X + 84, CAR_Y + 13, [-1, 0]); px(BOX_X + 73, CAR_Y + 12, 7, 2, "#9aa0a6");
+    drawCrew(BOX_X - 10, CAR_Y + 13, [1, 0]);  px(BOX_X - 6, CAR_Y + 12, 7, 2, "#9aa0a6");
+  }
+  drawCar(carX, CAR_Y, wheels, lift);
+  // lollipop by the nose
+  if (crewOn){ drawCrew(BOX_X + 96, CAR_Y - 2, [-1, 0]); px(BOX_X + 86, CAR_Y - 3, 6, 1, "#bbb");
+    px(BOX_X + 80, CAR_Y - 6, 6, 6, lolli === "green" ? "#2ecc71" : "#e74c3c"); px(BOX_X + 81, CAR_Y - 5, 4, 4, lolli === "green" ? "#7dffb0" : "#ff8a80"); }
+
+  if (!a.done) requestAnimationFrame(frame); else a.onDone && a.onDone();
+}
+
+/* ---------- run ---------- */
+let lap = 0, busy = false;
+const LINES_GO = ["Box, box. Box this lap.", "Copy, boxing.", "Pit lane speed limiter on."];
+async function run(){
+  if (busy) return; busy = true; $("#go").disabled = true; lap++;
+  $("#lap").textContent = "LAP " + lap; $("#call").textContent = ""; $("#call").className = "call"; $("#watch").textContent = "0.00";
+  radio.innerHTML = ""; say("ENG", LINES_GO[0]); setTimeout(() => say("CAR", LINES_GO[1]), 500);
+
+  const a = anim = { t0: performance.now(), wheelDur: [0, 0, 0, 0].map(() => 1350 + Math.random() * 500), result: null, failed: false };
+  a.onStop = () => { say("PIT", `car stopped. checking ${CHECKS.length} endpoints...`); };
+  requestAnimationFrame(frame);
+
+  const started = performance.now();
+  const results = await Promise.all(CHECKS.map(probe));
+  // never finish the stop before the car has actually stopped
+  const wait = Math.max(0, 1500 - (performance.now() - started)); await new Promise(r => setTimeout(r, wait));
+
+  tower(results);
+  const bad = results.filter(r => !r.ok);
+  const build = results.find(r => r.name === "BUILD");
+  $("#ver").textContent = build && build.body ? "BUILD " + build.body.slice(0, 7) : "";
+  a.failed = bad.length > 0; a.result = results;
+
+  if (a.failed){
+    say("PIT", `<span class="dnf">problem on ${bad.map(b => b.name + " (" + b.status + ")").join(", ")}</span>`);
+    setTimeout(() => { say("ENG", "Stay in the car. Stay in the car."); $("#call").textContent = "BIG PROBLEM IN THE PIT LANE! " + bad.length + " DOWN"; $("#call").className = "call bad"; a.frozen = true; $("#watch").textContent = "DNF"; busy = false; $("#go").disabled = false; $("#go").textContent = "try again"; }, 1200);
+    return;
+  }
+  const fastest = results.reduce((m, r) => r.ms < m.ms ? r : m);
+  a.onGo = () => {
+    say("PIT", `all ${results.length} green. fastest: ${fastest.name} in ${(fastest.ms / 1000).toFixed(3)}s`);
+    say("ENG", "Go, go, go!");
+  };
+  a.onDone = () => {
+    const tt = a.stopTime.toFixed(2);
+    $("#watch").textContent = tt;
+    $("#call").textContent = "...AND THROUGH GOES OMHINGE.CLOUD!";
+    $("#call").className = "call win";
+    say("ENG", `Good stop, ${tt} seconds. Everything is green, push now.`);
+    busy = false; $("#go").disabled = false; $("#go").textContent = "box again";
+  };
+}
+$("#go").addEventListener("click", run);
+addEventListener("keydown", e => { if (e.key === "Enter" && !e.repeat && document.activeElement.tagName !== "A"){ e.preventDefault(); run(); } });
+
+// first paint: empty pit box, then the car comes in on its own
+drawScene();
+setTimeout(run, 500);
+</script>
+</body>
+</html>

@@ -243,4 +243,7 @@ ${posts.map(p => `  <url><loc>${SITE}${p.url}</loc><lastmod>${p.date}</lastmod><
 </urlset>
 `);
 
+// deployed commit, read by the uptime workflow to know when a push is live
+fs.writeFileSync(path.join(ROOT, "site", "version.txt"), (process.env.CF_PAGES_COMMIT_SHA || "local") + "\n");
+
 console.log(`built ${posts.length} post(s) → site/blog/`);

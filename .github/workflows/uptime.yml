@@ -1,7 +1,8 @@
 name: uptime
 
 # Cloudflare Pages deploys this repo on every push (Git integration).
-# This workflow only watches the live site: after each push and every 6 hours.
+# This workflow watches the live site: after each push (once the new build is live) and every 6 hours.
+# It only fails when the main site is really broken. Problems with www are reported as warnings.
 on:
   push:
     branches: [main]
@@ -9,26 +10,55 @@ on:
     - cron: "17 */6 * * *"
   workflow_dispatch:
 
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SITE: https://omhinge.cloud
+      UA: "omhinge-uptime/1.0 (+https://github.com/Aisu2635/omhinge.cloud)"
     steps:
-      - name: Wait for Cloudflare to finish deploying
+      - name: Wait for this commit to go live
         if: github.event_name == 'push'
-        run: sleep 90
-
-      - name: Check omhinge.cloud
         run: |
-          for url in https://omhinge.cloud https://www.omhinge.cloud; do
-            ok=""
-            for i in 1 2 3 4 5; do
-              code=$(curl -s -o /dev/null -w "%{http_code}" -L "$url")
-              if [ "$code" = "200" ]; then ok=1; break; fi
-              echo "$url -> $code, retry $i"; sleep 10
-            done
-            [ -n "$ok" ] || { echo "::error::$url is down"; exit 1; }
-            echo "$url -> 200"
+          # build.mjs writes the deployed commit to /version.txt
+          for i in $(seq 1 36); do
+            live=$(curl -fsS --max-time 10 -A "$UA" "$SITE/version.txt?nocache=$RANDOM" || true)
+            if [ "$live" = "$GITHUB_SHA" ]; then echo "commit $GITHUB_SHA is live"; exit 0; fi
+            echo "live: ${live:-unknown}, waiting for $GITHUB_SHA ($i/36)"; sleep 10
           done
-          curl -sI https://omhinge.cloud | grep -qi "content-security-policy" \
-            || { echo "::error::security headers missing"; exit 1; }
-          echo "security headers present"
+          echo "::warning::commit $GITHUB_SHA not live after 6 minutes, checking whatever is deployed"
+
+      - name: Check the site
+        run: |
+          fail=0
+          echo "| URL | Status | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          check () {  # url  expected-codes  severity
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+                   --retry 3 --retry-delay 5 --retry-all-errors -A "$UA" "$1")
+            if echo " $2 " | grep -q " $code "; then
+              echo "ok    $code  $1"; echo "| $1 | $code | ok |" >> "$GITHUB_STEP_SUMMARY"
+            elif [ "$3" = "warn" ]; then
+              echo "::warning::$1 returned $code (expected $2)"; echo "| $1 | $code | warning |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::error::$1 returned $code (expected $2)"; echo "| $1 | $code | **failed** |" >> "$GITHUB_STEP_SUMMARY"; fail=1
+            fi
+          }
+          check "$SITE/"                       "200" error
+          check "$SITE/blog/"                  "200" error
+          check "$SITE/blog/feed.xml"          "200" error
+          check "$SITE/sitemap.xml"            "200" error
+          check "$SITE/Om_Hinge_Resume.pdf"    "200" error
+          check "https://www.omhinge.cloud/"   "200 301 302 307 308" warn
+
+          if curl -sI --max-time 20 -A "$UA" "$SITE/" | grep -qi "^content-security-policy:"; then
+            echo "ok    security headers present"
+          else
+            echo "::error::security headers missing on $SITE/"; fail=1
+          fi
+          exit $fail

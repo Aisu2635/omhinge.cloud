@@ -483,6 +483,8 @@ kbd{font:600 11px/1 var(--mono);color:var(--fg);border:1px solid var(--dim);bord
           <div><div class="big" id="rt">0.000</div><div class="small" id="rtmsg"><span class="only-mouse">Press Enter to start</span><span class="only-touch">Tap to start</span></div></div>
           <div class="small" style="text-align:right">personal best<br><span class="a" id="best">--</span><br>F1 drivers: ~0.200 s</div>
         </div>
+        <div class="small" style="opacity:.6">psst: the site has a pit wall too. try <span class="p">boxbox</span> in the shell.
+        </div>
       </div>
 
       <div class="rig shift" id="ride">
@@ -680,12 +682,13 @@ const CMDS = {
   sudo:{d:"try it", f(a){ if(a.join(" ").includes("hire")) print(`<span class="p">[sudo] permission granted.</span> Send the offer to ${CFG.email} ✓`); else print(`om is not in the sudoers file. Try <span class="p">sudo hire om</span>.`); }},
   date:{d:"time in IST", h:1, f(){ print(new Date().toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})+" IST"); }},
   history:{d:"", h:1, f(){ print(hist.map((h,i)=>`${String(i+1).padStart(4)}  ${esc(h)}`).join("\n")||" "); }},
+  boxbox:{d:"", h:1, f(){ print(`<span class="a">[ENG]</span> Box, box. Box this lap.\n<span class="d">heading to the pit wall ...</span>`); setTimeout(()=>{ location.href="/pitwall/"; },900); }},
   signal:{d:"", h:1, f(){ print(`<span class="a">signal lit.</span> <span class="d">the night shift has been summoned.</span>`); night(); }},
   clear:{d:"clear the screen", f(){ out.innerHTML=""; }},
   exit:{d:"", h:1, f(){ print("there is no exit. only git push."); }}
 };
 CMDS.kubectl = {h:1, f(a){ const i=a.indexOf("-n"); CMDS.skills.f(i>-1?[a[i+1]]:[]); }};
-CMDS.cv = CMDS.resume; CMDS.wget = {h:1, f(){ CMDS.resume.f(); }}; CMDS.curl = CMDS.wget;
+CMDS.cv = CMDS.resume; ["healthcheck","pitstop","pitwall","box"].forEach(k=>CMDS[k]=CMDS.boxbox); CMDS.wget = {h:1, f(){ CMDS.resume.f(); }}; CMDS.curl = CMDS.wget;
 CMDS.git = {h:1, f(){ CMDS.experience.f(); }};
 ["batman","gotham","nightshift"].forEach(k=>CMDS[k]=CMDS.signal);
 
