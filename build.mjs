@@ -93,16 +93,19 @@ function frontMatter(raw) {
 }
 
 // ---------- templates ----------
-const HEAD = (title, desc, url, image) => `<!doctype html>
+const HEAD = (title, desc, url, image, x = {}) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(title)}</title>
 <meta name="description" content="${attr(desc)}">
+<meta name="author" content="Om Hinge">
+<meta name="robots" content="${x.noindex ? "noindex, follow" : "index, follow, max-image-preview:large"}">
 <meta name="theme-color" content="#060907">
 <link rel="canonical" href="${url}">
-<meta property="og:type" content="article">
+<meta property="og:type" content="${x.type || "website"}">
+<meta property="og:site_name" content="Om Hinge">${x.published ? `\n<meta property="article:published_time" content="${x.published}">\n<meta property="article:author" content="${SITE}/">` + (x.tags || []).map(t => `\n<meta property="article:tag" content="${attr(t)}">`).join("") : ""}${x.ld ? `\n<script type="application/ld+json">${JSON.stringify(x.ld).replace(/</g, "\\u003c")}</script>` : ""}
 <meta property="og:url" content="${url}">
 <meta property="og:title" content="${attr(title)}">
 <meta property="og:description" content="${attr(desc)}">
@@ -143,7 +146,13 @@ const posts = fs.readdirSync(POSTS).filter(f => f.endsWith(".md") && !f.startsWi
 for (const p of posts) {
   const dir = path.join(OUT, p.slug); fs.mkdirSync(dir, { recursive: true });
   const idx = posts.indexOf(p), newer = posts[idx - 1], older = posts[idx + 1];
-  fs.writeFileSync(path.join(dir, "index.html"), HEAD(`${p.title} · Om Hinge`, p.summary, SITE + p.url, p.cover) + `
+  fs.writeFileSync(path.join(dir, "index.html"), HEAD(`${p.title} · Om Hinge`, p.summary, SITE + p.url, p.cover, { type: "article", published: p.date, tags: p.tags, ld: {
+    "@context": "https://schema.org", "@type": "BlogPosting", headline: p.title, description: p.summary,
+    datePublished: p.date, dateModified: p.updated || p.date, url: SITE + p.url, mainEntityOfPage: SITE + p.url,
+    image: p.cover ? SITE + p.cover : undefined, keywords: p.tags.join(", "), inLanguage: "en",
+    author: { "@type": "Person", "@id": SITE + "/#om", name: "Om Hinge", url: SITE + "/" },
+    publisher: { "@type": "Person", "@id": SITE + "/#om", name: "Om Hinge" },
+    isPartOf: { "@type": "Blog", name: "Notes from Prod", url: SITE + "/blog/" } } }) + `
 <article class="post">
   <div class="cmd"><span class="p">om@omniscient:~/blog$</span> cat ${p.slug}.md</div>
   <h1>${inline(p.title)}</h1>
@@ -160,7 +169,10 @@ ${p.html}
 }
 
 // index
-fs.writeFileSync(path.join(OUT, "index.html"), HEAD("Blog · Om Hinge", "Notes from the network layer: Kubernetes, Azure, ingress, CI/CD and the bugs in between.", SITE + "/blog/") + `
+fs.writeFileSync(path.join(OUT, "index.html"), HEAD("Notes from Prod · Om Hinge's DevOps blog", "Production lessons from a DevOps engineer: Kubernetes, AKS, Azure networking, ingress, MongoDB and CI/CD incidents, written up in detail.", SITE + "/blog/", null, { ld: {
+    "@context": "https://schema.org", "@type": "Blog", name: "Notes from Prod", url: SITE + "/blog/",
+    author: { "@type": "Person", "@id": SITE + "/#om", name: "Om Hinge", url: SITE + "/" },
+    blogPost: posts.map(p => ({ "@type": "BlogPosting", headline: p.title, url: SITE + p.url, datePublished: p.date })) } }) + `
 <section class="list">
   <div class="cmd"><span class="p">om@omniscient:~/blog$</span> ls -lt</div>
   <h1>Notes from the <em>network</em> layer</h1>
@@ -203,7 +215,7 @@ ${posts.map(p => `  <item>
 // rss landing page (opening feed.xml directly shows raw XML or downloads it)
 const FEED = `${SITE}/blog/feed.xml`, enc = encodeURIComponent(FEED);
 fs.mkdirSync(path.join(OUT, "rss"), { recursive: true });
-fs.writeFileSync(path.join(OUT, "rss", "index.html"), HEAD("Subscribe · Om Hinge", "Follow new posts from omhinge.cloud in any RSS reader.", SITE + "/blog/rss/") + `
+fs.writeFileSync(path.join(OUT, "rss", "index.html"), HEAD("Subscribe · Om Hinge", "Follow new posts from omhinge.cloud in any RSS reader.", SITE + "/blog/rss/", null, { noindex: true }) + `
 <section class="list">
   <div class="cmd"><span class="p">om@omniscient:~/blog$</span> cat subscribe.md</div>
   <h1>Follow the <em>blog</em></h1>
@@ -225,8 +237,8 @@ setTimeout(()=>b.textContent="copy",1500);});
 // sitemap
 fs.writeFileSync(path.join(ROOT, "site", "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>${SITE}/</loc></url>
-  <url><loc>${SITE}/blog/</loc></url>
+  <url><loc>${SITE}/</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod></url>
+  <url><loc>${SITE}/blog/</loc><lastmod>${posts[0] ? posts[0].date : new Date().toISOString().slice(0, 10)}</lastmod></url>
 ${posts.map(p => `  <url><loc>${SITE}${p.url}</loc><lastmod>${p.date}</lastmod></url>`).join("\n")}
 </urlset>
 `);
