@@ -104,6 +104,11 @@ h2 em{font-style:normal;color:var(--green)}
 .fp h3{margin:0;font:400 32px/1 var(--display);color:#fff}
 .fp p{margin:0;font-size:13px}
 .fp .perm{color:var(--amber);font-size:12px}
+.fp.flag{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;border-color:var(--green)}
+.flag-l{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fplinks{display:flex;flex-wrap:wrap;gap:6px 16px}
+.flag-demo{margin:0;background:#030504;border:1px solid var(--line);padding:14px;font:12.5px/1.6 var(--mono);color:var(--fg);overflow-x:auto;white-space:pre}
+@media (max-width:760px){ .fp.flag{grid-template-columns:1fr} }
 .fp .fplink{font-size:12px;align-self:flex-start;margin-top:2px}
 .fp .flow{font-size:12px;color:var(--dim);border-top:1px dashed var(--line);padding-top:8px;overflow-x:auto;white-space:nowrap}
 .lede{margin:0 0 14px;max-width:65ch;color:var(--fg)}
@@ -436,6 +441,28 @@ kbd{font:600 11px/1 var(--mono);color:var(--fg);border:1px solid var(--dim);bord
     <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">ls -l ~/projects</span></div>
     <h2>Projects</h2>
     <div class="feat">
+      <article class="fp flag">
+        <div class="flag-l">
+          <div class="perm">latest · live · typescript · react · open source</div>
+          <h3>RoleCraft</h3>
+          <p>A browser-only AWS IAM policy builder. Describe access in sentences and get a least-privilege permission policy, trust policy and ready-to-run AWS CLI, Terraform or CloudFormation. Covers all 456 AWS services, with smart handling for S3, EC2, EKS, Lambda and six more. No backend, no credentials: nothing you type leaves the browser.</p>
+          <div class="flow" aria-hidden="true">sentences → <span class="p">RoleModel</span> → policy + trust → JSON · CLI · Terraform · CloudFormation</div>
+          <div class="fplinks">
+            <a class="fplink" href="https://rolecraft.omhinge.cloud" target="_blank" rel="noopener">rolecraft.omhinge.cloud →</a>
+            <a class="fplink" href="https://github.com/Aisu2635/RoleCraft" target="_blank" rel="noopener">source on GitHub →</a>
+            <a class="fplink" href="/blog/rolecraft-architecture/">how it's designed →</a>
+          </div>
+        </div>
+        <pre class="flag-demo" aria-label="Example: a sentence and the policy RoleCraft generates"><span class="d"># you write</span>
+<span class="p">Can list and download files in</span>
+<span class="p">reports/ of data-lake</span>
+
+<span class="d"># RoleCraft generates</span>
+s3:ListBucket  <span class="a">arn:aws:s3:::data-lake</span>
+  if s3:prefix = reports/, reports/*
+s3:GetObject   <span class="a">arn:aws:s3:::data-lake/reports/*</span>
+s3:GetObjectVersion</pre>
+      </article>
       <article class="fp">
         <div class="perm">in progress · android app · kotlin</div>
         <h3>HorizOn</h3>
@@ -513,7 +540,7 @@ kbd{font:600 11px/1 var(--mono);color:var(--fg);border:1px solid var(--dim);bord
     </div>
   </section>
 
-  <footer>Served from Cloudflare Pages, shipped by GitHub Actions on every push to main. The background is a live mesh: move your cursor to join it, click to send packets<button class="egg" id="egg" aria-label="Easter egg">.</button><br><span class="d hint">psst: some engineers only show up after dark. there's one command the help menu won't tell you about.</span></footer>
+  <footer>Served from Cloudflare Pages, shipped by GitHub Actions on every push to main. The background is a live mesh: move your cursor to join it, click to send packets<button class="egg" id="egg" aria-label="Easter egg">.</button><br><span class="d hint"><a href="/sitemap/" style="border:0;color:inherit">sitemap</a> · psst: some engineers only show up after dark. there's one command the help menu won't tell you about.</span></footer>
   <div class="night" id="night" hidden>
     <canvas class="sky" id="nightcv" aria-hidden="true"></canvas>
     <div class="nightmsg"><div class="big">03:00 IST</div><p>The pager went off. The city is asleep. The bats are out.</p><p class="d">Some engineers sleep. Some are on-call.</p><button class="btn" id="dawn">wait for dawn</button></div>
@@ -659,7 +686,7 @@ const CMDS = {
   about:{d:"jump to about", f(){ print("opening about.md ..."); go("about"); }},
   skills:{d:"kubectl get skills [ns]", f(a){ const ns=a[0]&&NS.includes(a[0])?a[0]:"all"; renderSkills(ns); print(`${SKILLS.filter(s=>ns==="all"||s[1]===ns).length} skills in <span class="a">${ns}</span>. namespaces: ${NS.join(", ")}`); go("skills"); }},
   experience:{d:"git log career", f(){ print(`<span class="a">a1f3c09</span> <span class="p">(HEAD -> main)</span> Assoc. Software Dev (DevOps) @ Bajaj Finserv Health  <span class="d">Nov 2025–now</span>\n<span class="a">5b8e113</span> DevOps Intern @ Bajaj Finserv Health  <span class="d">Apr–Oct 2025</span>\n<span class="a">7e2d0b4</span> DevOps Engineer (Intern) @ Xora  <span class="d">Feb–Mar 2025</span>\n<span class="a">3c91fa0</span> Software Engineer DevOps @ Artha IT  <span class="d">Feb–Mar 2025</span>\n<span class="a">9d04c7a</span> Cloud Engineer Intern @ Claw Enterprises  <span class="d">May–Jul 2024</span>\n<span class="a">2f6b8d1</span> Technical Head @ CSI-TCET  <span class="d">2022–23</span>\n<span class="a">0c4b1e2</span> B.E. Computer Engg, TCET Mumbai (9.42 CGPA)`); go("experience"); }},
-  projects:{d:"ls ~/projects", f(){ print(`<span class="w">featured</span>\n<span class="p">${"DB Dashboard".padEnd(20)}</span><span class="d">DB access & governance platform</span>\n<span class="p">${"FlowOps".padEnd(20)}</span><span class="d">visual GitHub Actions builder</span>\n<span class="w">github</span>`); print(PROJECTS.map(p=>`<span class="p">${p.n.padEnd(20)}</span><span class="d">${p.l}</span>`).join("\n")); go("projects"); }},
+  projects:{d:"ls ~/projects", f(){ print(`<span class="w">featured</span>\n<span class="p">${"RoleCraft".padEnd(20)}</span><span class="d">visual AWS IAM policy builder</span> ${lnk("https://rolecraft.omhinge.cloud","live")}\n<span class="p">${"HorizOn".padEnd(20)}</span><span class="d">Android standby mode</span>\n<span class="p">${"DB Dashboard".padEnd(20)}</span><span class="d">DB access & governance platform</span>\n<span class="p">${"FlowOps".padEnd(20)}</span><span class="d">visual GitHub Actions builder</span>\n<span class="w">github</span>`); print(PROJECTS.map(p=>`<span class="p">${p.n.padEnd(20)}</span><span class="d">${p.l}</span>`).join("\n")); go("projects"); }},
   f1:{d:"lights out reaction test", f(){ print("box box. heading to the grid ..."); go("garage"); setTimeout(()=>$("#gantry").focus({preventScroll:true}),500); }},
   blog:{d:"read my blog", async f(){
     print(`<span class="d">$ ls -lt ~/blog</span>`);
@@ -677,18 +704,20 @@ const CMDS = {
   github:{d:"open my github", f(){ print(`→ ${lnk(CFG.github)}`); }},
   linkedin:{d:"open my linkedin", f(){ print(CFG.linkedin?`→ ${lnk(CFG.linkedin)}`:`<span class="d">linkedin link not added yet</span>`); }},
   ping:{d:"ping om", f(a){ const h=a[0]||"om"; let n=0; const t=setInterval(()=>{ n++; print(`64 bytes from ${esc(h)}: icmp_seq=${n} ttl=64 time=${(Math.random()*8+2).toFixed(2)} ms`); if(n===4){clearInterval(t); print(`<span class="d">--- ${esc(h)} ping statistics: 4 sent, 4 received, 0% loss ---</span>`);} },350); }},
-  ls:{d:"list files", f(){ print(`<span class="p">about.md  contact.yaml  career.log  blog/  projects/  garage/</span>`); }},
+  ls:{d:"list files", f(){ print(`<span class="p">about.md  contact.yaml  career.log  blog/  projects/  garage/  sitemap/</span>`); }},
   cat:{d:"cat <file>", h:1, f(a){ const m={"about.md":"about","contact.yaml":"contact","career.log":"experience"}; if(m[a[0]]) CMDS[m[a[0]]==="experience"?"experience":m[a[0]]].f([]); else print(`cat: ${esc(a[0]||"")}: No such file or directory`,"r"); }},
   sudo:{d:"try it", f(a){ if(a.join(" ").includes("hire")) print(`<span class="p">[sudo] permission granted.</span> Send the offer to ${CFG.email} ✓`); else print(`om is not in the sudoers file. Try <span class="p">sudo hire om</span>.`); }},
   date:{d:"time in IST", h:1, f(){ print(new Date().toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})+" IST"); }},
   history:{d:"", h:1, f(){ print(hist.map((h,i)=>`${String(i+1).padStart(4)}  ${esc(h)}`).join("\n")||" "); }},
+  rolecraft:{d:"my latest project", f(){ print(`<span class="w">RoleCraft</span> <span class="d">· visual AWS IAM policy builder</span>\nsentences in, least-privilege policy + trust out\nexports: JSON, AWS CLI (bash/PowerShell), Terraform, CloudFormation\n<span class="d">no backend · no credentials · 456 AWS services</span>\n→ ${lnk("https://rolecraft.omhinge.cloud","rolecraft.omhinge.cloud")}  ${lnk("/blog/rolecraft-architecture/","how it's designed")}`); go("projects"); }},
+  sitemap:{d:"every page on this site", f(){ print(`<span class="d">$ tree ~</span>\nopening the sitemap ...`); setTimeout(()=>{ location.href="/sitemap/"; },600); }},
   boxbox:{d:"", h:1, f(){ print(`<span class="a">[ENG]</span> Box, box. Box this lap.\n<span class="d">heading to the pit wall ...</span>`); setTimeout(()=>{ location.href="/pitwall/"; },900); }},
   signal:{d:"", h:1, f(){ print(`<span class="a">signal lit.</span> <span class="d">the night shift has been summoned.</span>`); night(); }},
   clear:{d:"clear the screen", f(){ out.innerHTML=""; }},
   exit:{d:"", h:1, f(){ print("there is no exit. only git push."); }}
 };
 CMDS.kubectl = {h:1, f(a){ const i=a.indexOf("-n"); CMDS.skills.f(i>-1?[a[i+1]]:[]); }};
-CMDS.cv = CMDS.resume; ["healthcheck","pitstop","pitwall","box"].forEach(k=>CMDS[k]=CMDS.boxbox); CMDS.wget = {h:1, f(){ CMDS.resume.f(); }}; CMDS.curl = CMDS.wget;
+CMDS.cv = CMDS.resume; CMDS.tree = CMDS.sitemap; ["healthcheck","pitstop","pitwall","box"].forEach(k=>CMDS[k]=CMDS.boxbox); CMDS.wget = {h:1, f(){ CMDS.resume.f(); }}; CMDS.curl = CMDS.wget;
 CMDS.git = {h:1, f(){ CMDS.experience.f(); }};
 ["batman","gotham","nightshift"].forEach(k=>CMDS[k]=CMDS.signal);
 
@@ -709,7 +738,7 @@ tin.addEventListener("keydown", e=>{
   else if(e.key==="l"&&e.ctrlKey){ e.preventDefault(); out.innerHTML=""; }
 });
 tbody.addEventListener("click", e=>{ if(!e.target.closest("a") && !getSelection().toString()) tin.focus({preventScroll:true}); });
-const quick = ["help","resume","neofetch","skills","experience","trace","projects","f1","ride","contact","sudo hire om"];
+const quick = ["help","rolecraft","resume","neofetch","skills","experience","trace","projects","f1","ride","contact","sudo hire om"];
 $("#chips").innerHTML = quick.map(q=>`<button class="chip">${q}</button>`).join("");
 $("#chips").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(b){ run(b.textContent); } });
 

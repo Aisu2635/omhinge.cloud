@@ -79,6 +79,14 @@ figure.fig figcaption{font:13px/1.5 var(--mono);color:var(--dim);margin-top:8px}
 .feedbox button{font:600 13px var(--mono);background:var(--green);color:var(--bg);border:0;padding:10px 16px;cursor:pointer}
 .readers{list-style:none;padding:0;margin:0 0 20px;display:flex;flex-wrap:wrap;gap:10px}
 .readers a{display:inline-block;border:1px solid var(--green-d);padding:8px 14px;font:13px var(--mono)}
+ul.tree{list-style:none;margin:0;padding:0 0 0 0;font:15px/1.9 var(--mono)}
+ul.tree ul.tree{padding-left:2.2ch;border-left:1px solid var(--line);margin-left:.6ch}
+ul.tree ul.tree.last{border-left-color:transparent}
+.tw{color:var(--dim);white-space:pre}
+.dir{color:var(--amber)}
+ul.tree a{border:0}
+ul.tree a:hover{background:var(--green)}
+ul.tree.root{margin:8px 0 22px}
 .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font:12px/1.5 var(--mono);color:var(--dim);padding-block:48px 32px}
 @media (max-width:560px){
   body{font-size:16px}

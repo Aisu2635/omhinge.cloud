@@ -122,7 +122,7 @@ ${image ? `<meta property="og:image" content="${SITE}${image}">\n<meta name="twi
 <header class="top"><a href="/" class="home">om@omniscient</a><span class="d">:</span><a href="/blog/">~/blog</a><span class="d">$</span><nav><a href="/">home</a><a href="/blog/">blog</a><a href="/blog/rss/">rss</a><a href="/Om_Hinge_Resume.pdf" download>resume</a></nav></header>
 <main class="wrap">`;
 const FOOT = `</main>
-<footer class="foot wrap"><span>© ${new Date().getFullYear()} Om Hinge</span><span><a href="https://github.com/Aisu2635" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/om-hinge2635" target="_blank" rel="noopener">linkedin</a> · <a href="/blog/rss/">rss</a></span></footer>
+<footer class="foot wrap"><span>© ${new Date().getFullYear()} Om Hinge</span><span><a href="https://github.com/Aisu2635" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/om-hinge2635" target="_blank" rel="noopener">linkedin</a> · <a href="/blog/rss/">rss</a> · <a href="/sitemap/">sitemap</a></span></footer>
 </body>
 </html>
 `;
@@ -234,10 +234,53 @@ document.getElementById("cp").addEventListener("click",e=>{const b=e.currentTarg
 setTimeout(()=>b.textContent="copy",1500);});
 </script>` + FOOT);
 
+// human-readable sitemap at /sitemap/ (tree style)
+const T = (items) => items.map((it, i) => {
+  const last = i === items.length - 1, pre = last ? "└── " : "├── ";
+  const line = `<li><span class="tw">${pre}</span>${it.href ? `<a href="${it.href}"${/^https?:/.test(it.href) ? ' target="_blank" rel="noopener"' : ""}>${esc(it.name)}</a>` : `<span class="dir">${esc(it.name)}</span>`}${it.note ? ` <span class="d">${esc(it.note)}</span>` : ""}`;
+  const kids = it.children ? `<ul class="tree${last ? " last" : ""}">${T(it.children)}</ul>` : "";
+  return line + kids + "</li>";
+}).join("");
+const MAP = [
+  { name: "home/", href: "/", note: "the shell, projects, experience and games", children: [
+    { name: "#about", href: "/#about", note: "who I am" },
+    { name: "#skills", href: "/#skills", note: "the stack, kubectl style" },
+    { name: "#experience", href: "/#experience", note: "git log of my career" },
+    { name: "#debug", href: "/#debug", note: "find the dropped packet" },
+    { name: "#projects", href: "/#projects", note: "RoleCraft, HorizOn and more" },
+    { name: "#writing", href: "/#writing", note: "latest posts" },
+    { name: "#garage", href: "/#garage", note: "F1 lights-out and the throttle" },
+    { name: "#contact", href: "/#contact", note: "say hi" },
+  ] },
+  { name: "blog/", href: "/blog/", note: "Notes from Prod", children: [
+    ...posts.map((p) => ({ name: p.slug + "/", href: p.url, note: p.date })),
+    { name: "rss/", href: "/blog/rss/", note: "subscribe" },
+  ] },
+  { name: "projects/", children: [
+    { name: "rolecraft", href: "https://rolecraft.omhinge.cloud", note: "visual AWS IAM policy builder" },
+    { name: "rolecraft (source)", href: "https://github.com/Aisu2635/RoleCraft" },
+    { name: "horizon (source)", href: "https://github.com/Aisu2635/HorizOn", note: "Android standby mode" },
+    { name: "everything else", href: "https://github.com/Aisu2635?tab=repositories" },
+  ] },
+  { name: "Om_Hinge_Resume.pdf", href: "/Om_Hinge_Resume.pdf", note: "PDF" },
+  { name: "sitemap.xml", href: "/sitemap.xml", note: "for search engines" },
+  { name: "???", note: "two easter eggs live in the shell. type help, then guess." },
+];
+fs.mkdirSync(path.join(OUT, "..", "sitemap"), { recursive: true });
+fs.writeFileSync(path.join(ROOT, "site", "sitemap", "index.html"), HEAD("Sitemap · Om Hinge", "Every page on omhinge.cloud: the portfolio sections, every blog post, projects and the resume.", SITE + "/sitemap/") + `
+<section class="list">
+  <div class="cmd"><span class="p">om@omniscient:~$</span> tree ~ --dirsfirst</div>
+  <h1>Site<em>map</em></h1>
+  <p class="lede">Every page on this site, in one place.</p>
+  <ul class="tree root"><li><span class="dir">~</span><ul class="tree last">${T(MAP)}</ul></li></ul>
+  <p class="d small">${posts.length} posts · generated on every deploy</p>
+</section>` + FOOT);
+
 // sitemap
 fs.writeFileSync(path.join(ROOT, "site", "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${SITE}/</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod></url>
+  <url><loc>${SITE}/sitemap/</loc></url>
   <url><loc>${SITE}/blog/</loc><lastmod>${posts[0] ? posts[0].date : new Date().toISOString().slice(0, 10)}</lastmod></url>
 ${posts.map(p => `  <url><loc>${SITE}${p.url}</loc><lastmod>${p.date}</lastmod></url>`).join("\n")}
 </urlset>
