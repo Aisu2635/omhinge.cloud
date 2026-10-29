@@ -318,13 +318,13 @@ kbd{font:600 11px/1 var(--mono);color:var(--fg);border:1px solid var(--dim);bord
     <div class="cmd"><span class="p">om@omniscient:~$</span><span class="c">cat about.md</span></div>
     <h2>I keep the <em>packets</em> moving.</h2>
     <div class="prose">
-      <p>I'm a DevOps engineer at Bajaj Finserv Health, running Azure infrastructure for two organisations (BFHL and Vidal Health): 3–5 AKS clusters and 100+ microservices.</p>
+      <p>I'm a DevOps engineer at Bajaj Finserv Health, running Azure infrastructure for two organisations (BFHL and Vidal Health): 6 AKS clusters and 100+ microservices.</p>
       <p>Most of my work is on the network. When something can't reach something else, I'm the one tracing it: NSGs, UDRs, Azure Firewall policies, IPSec tunnels, ingress. I design hybrid connectivity, debug it when it breaks, and led the Nginx-to-Traefik migration across every service with zero downtime.</p>
       <p>I take part in most architecture-level discussions on the team, handle incident escalations, and trained 3 interns from zero to shipping on Kubernetes, CI/CD and Azure.</p>
       <p>Off the clock: F1 on race weekends, the bike when the roads are clear, and Arch Linux on my machine.</p>
       <div class="stats" aria-label="Impact numbers">
         <div><b>100+</b><span>microservices migrated to Traefik, zero downtime</span></div>
-        <div><b>99.9%+</b><span>availability across 3–5 AKS clusters</span></div>
+        <div><b>99.9%+</b><span>availability across 6 AKS clusters</span></div>
         <div><b>~8%</b><span>Azure spend cut through rightsizing and cleanup</span></div>
         <div><b>40%</b><span>faster deploy cycle after the GitLab CI rebuild</span></div>
         <div><b>3</b><span>interns trained end-to-end</span></div>
@@ -361,10 +361,12 @@ kbd{font:600 11px/1 var(--mono);color:var(--fg);border:1px solid var(--dim);bord
           <li><span class="tag">lead</span>De facto tech lead for DevOps across both orgs. Part of most architecture-level discussions, owner of incident escalations and cross-team coordination. Trained and mentored 3 interns on Kubernetes, CI/CD and Azure.</li>
           <li><span class="tag">network</span>Designed hybrid networking with IPSec VPN tunnels, UDRs and Azure Firewall routing policies to secure inter-VNet and cross-cloud traffic. First call when traffic stops flowing.</li>
           <li><span class="tag">ingress</span>Sole engineer on the Nginx-to-Traefik migration across 100+ microservices in two orgs, with a zero-downtime cutover ahead of Nginx end-of-life.</li>
-          <li><span class="tag">reliability</span>Resolved production incidents across AKS, MongoDB and Azure VMs under live traffic, and wrote the runbooks. Owned DR planning for 3–5 AKS clusters at 99.9%+ availability.</li>
+          <li><span class="tag">reliability</span>Resolved production incidents across AKS, MongoDB and Azure VMs under live traffic, and wrote the runbooks. Owned DR and failover for 6 AKS clusters at 99.9%+ availability.</li>
           <li><span class="tag">k8s</span>Onboarded 10+ services with Helm charts, Traefik ingress rules and resource limits, cutting time-to-deploy for new services by ~30%.</li>
-          <li><span class="tag">ci/cd</span>Built and maintain 5–15 Azure DevOps pipelines that standardise build-test-deploy and removed manual releases.</li>
-          <li><span class="tag">iac</span>Automated provisioning and patching with Terraform and Bash/Python. Cut Azure spend ~8% via VM rightsizing, orphan cleanup and non-prod shutdown schedules.</li>
+          <li><span class="tag">waf</span>Key role in moving apps behind Cloudflare WAF: deployed the VMs running cloudflared tunnels and wrote the UDRs and Azure Firewall policies that route every hop from Cloudflare to the apps through the firewall.</li>
+          <li><span class="tag">ci/cd</span>Built 6 custom Azure DevOps pipelines: ACR base-image updates, VMSS agent-image rebuilds that pre-bake tools, an on-demand VMSS scale-up and deploy pipeline for dev teams, an AKS network-debug pod deployer, and an ingress validator that catches duplicate routes.</li>
+          <li><span class="tag">iac</span>Automated provisioning and patching with Terraform/OpenTofu and Bash/Python. Cut Azure spend ~8% via VM rightsizing, orphan cleanup and non-prod shutdown schedules.</li>
+          <li><span class="tag">aws</span>In progress: setting up AWS infrastructure for a new project (EC2, S3, ECR, IAM).</li>
         </ul>
       </div>
       <div class="commit">
@@ -657,7 +659,7 @@ const NEOFETCH = () => innerWidth<560 ? NEOFETCH_SM() : `<span class="p">      .
 <span class="p">   .-(    ).        </span>  ---------
 <span class="p">  (___.__)__)       </span>  <span class="p">role</span>:    DevOps Engineer
 <span class="p">   |  |  |          </span>  <span class="p">org</span>:     Bajaj Finserv Health Ltd.
-<span class="p">  [n]-[n]-[n]       </span>  <span class="p">fleet</span>:   3–5 aks clusters · 100+ svcs
+<span class="p">  [n]-[n]-[n]       </span>  <span class="p">fleet</span>:   6 aks clusters   · 100+ svcs
 <span class="p">                    </span>  <span class="p">cloud</span>:   azure (primary), aws, gcp
 <span class="p">                    </span>  <span class="p">orch</span>:    kubernetes, aks, helm, docker
 <span class="p">                    </span>  <span class="p">net</span>:     vnet, nsg, udr, firewall, ipsec
@@ -671,7 +673,7 @@ const NEOFETCH_SM = () => `<span class="w">om</span>@<span class="w">omniscient<
 <span class="d">--------------</span>
 <span class="p">role</span>    DevOps Engineer
 <span class="p">org</span>     Bajaj Finserv Health
-<span class="p">fleet</span>   3–5 AKS · 100+ svcs
+<span class="p">fleet</span>   6 AKS · 100+ svcs
 <span class="p">cloud</span>   azure*, aws, gcp
 <span class="p">net</span>     vnet nsg udr fw ipsec
 <span class="p">iac</span>     opentofu, terraform
